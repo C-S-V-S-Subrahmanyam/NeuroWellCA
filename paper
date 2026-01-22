@@ -1,0 +1,115 @@
+IC-ECBE' 2026 
+NeuroWell Conversational Agent: A Multi-Stage AI Framework for Personalized Student Mental Health Support (NeuroWell-CA)
+
+1DR. LALITHA KUMARA GADDALA, 2CHINTHALAPATI SRI VENKATA SAI SUBRAHMANYAM, 3 AAKASH KODALI, 4 ABDUL AZEEZ, 5ABDUL JABBAR
+
+1Sr. Assistant Professor, 2345Student Scholars Department of CSE, 
+Prasad V Potluri Siddhartha Institute of Technology, Andhra Pradesh, INDIA
+
+E-mail: subrahmanyam310308@gmail.com
+
+
+ 
+Abstract— In recent years, the prevalence of depression and anxiety has increased significantly, particularly among students, leading to reduced productivity and the adoption of unhealthy coping mechanisms. Factors such as academic pressure, societal expectations, inadequate emotional guidance, and limited psychological awareness contribute to this growing mental health concern. To address this issue, this project proposes a multi-stage AI-based mental health support system designed to assess psychological well-being and provide personalized assistance.
+The proposed system consists of three core stages. The first stage involves a structured psychological assessment using standardized questionnaires to evaluate an individual’s emotional state, behavioural tendencies, and social interactions. These assessment results are utilized to generate a personalized psychological profile using a secure, pre-trained Large Language Model (LLM). The second stage introduces a personalized AI assistant that functions as a supportive companion, offering emotionally responsive conversations, stress management guidance, and decision-making support tailored to the user’s psychological profile. The final stage incorporates interactive stress-relief and entertainment-based activities aimed at reducing mental fatigue and promoting emotional well-being.
+This system is primarily targeted toward students, a demographic particularly vulnerable to mental stress due to academic and societal pressures. By integrating psychological assessment, personalized AI interaction, and stress-relief engagement, the proposed solution aims to promote healthy coping strategies, enhance emotional resilience, and contribute to improved mental health outcomes.
+Keywords—Artificial Intelligence & Machine Learning, Gemini, API, Flask 
+	I.	INTRODUCTION (HEADING 1)
+Now a days there were many individuals were unable to cope with depression and anxiety which is leading loss of productivity of the individuals and finding illegal and non-healthy ways to cope or satisfy the pent-up depression. We can see the spike of crimes increase from last 3 decades this is due many people we changing their ways due to improper schooling or no persons right there way.
+Our project was intending to create system to system to assess the psychology of the individual through the series of tests and a personalized encrypted pre-trained LLM to give personalized chat bot to have healthy companion and keep cheek of our actions and decisions and also give us very helping hand when we were in verge of depression and plans to help it out of the mental stress.
+This project is of three steps involving test assessment, personal bot and entertainment which helps as stepping stone for coping of stressful life this system is used to build for the students as they were easily depressed and has higher depression rate due to higher expectations on the by others and lack of wisdom knowledge to read the situation which can lead the unhealthy relation toward the society 
+The First stage consists of psychology questions to understand there understanding toward the nature and there steps of approaching and relations towards society. These understandings were given to the Pre Trained LLM to produce the desired personality to understand the person 
+The Second stage is the AI Assistant which is built on the understanding of the test take by the user early the Assistant assist in coping up the stress by speaking up for you and participating actively in your conversation and activity.
+The final stage involves in engaging in stress less or coping up stress games to serve the purpose of joyfulness in each individual.
+The proposed project aims to develop a comprehensive system to assess an individual’s psychological state through a series of structured assessments and to provide personalized support using an encrypted, pre-trained Large Language Model (LLM). This system will function as a personalized AI companion that promotes healthy coping strategies, monitors behavioural patterns, supports decision-making, and assists individuals during periods of heightened emotional distress or depressive episodes.
+II. LITERATURE SURVEY 
+In [1], the authors present the growing mental health crisis among students and the rapid advancement of digital technologies have driven significant research into technology-assisted mental healthcare solutions. Abrams (2022) highlights that student mental health has reached a critical stage, with campuses struggling to address increasing levels of anxiety, depression, and stress among students. The study emphasizes the need for scalable, accessible, and innovative approaches beyond traditional counselling services, noting that institutional capacity is often insufficient to meet rising demand. 
+   In [2], the authors present Early explorations into human–computer interaction laid the foundation for modern conversational systems. Weizenbaum’s (2008) seminal work on ELIZA demonstrated the feasibility of natural language communication between humans and machines. Although ELIZA relied on simple pattern matching, it illustrated how users could form emotional connections with conversational programs, a phenomenon that remains relevant in today’s chatbot-based mental health interventions.. 
+   In [3] the authors present Supporting the urgency of student-focused interventions, the American College Health Association (2022) reports alarming trends in undergraduate mental health through its National College Health Assessment III. The executive summary reveals high prevalence rates of stress, anxiety, and depression, directly impacting academic performance and overall well-being. The report underscores the necessity of preventive and technology-enabled mental health support systems within educational institutions.
+lty rules.  The broader societal impact of chatbots is discussed by Wendel (2023), who examines the rapid adoption of chatbot technologies across professional domains. The article highlights both opportunities and ethical concerns, emphasizing that chatbots are increasingly trusted for information dissemination and preliminary guidance. This growing acceptance strengthens the case for chatbot deployment in sensitive domains such as healthcare and mental health support.
+    In [4], Psychosocial factors influencing academic achievement are examined by Oruche and Ezeiba (2021), who investigate the impact of child abuse on students’ academic outcomes. Their findings indicate a strong negative correlation between abusive experiences and academic performance, reinforcing the need for early mental health screening and support systems—areas where digital tools can offer anonymity and continuous access. 
+In [5], the authors provide Focusing on healthcare-specific applications, Kavitha and Chethana (2019) propose an AI-based chatbot for healthcare systems designed to assist users with basic medical guidance and symptom analysis. Their work demonstrates that chatbots can reduce the workload on healthcare professionals while improving response time and accessibility, particularly in resource-constrained environments. 
+In [6], the study offers The World Health Organization (2021) emphasizes the transformative role of digital technologies in shaping the future of global health. The report advocates for responsible integration of AI-driven solutions, including chatbots, to enhance healthcare delivery, improve patient engagement, and bridge gaps in mental health services—especially in underserved populations.
+ Chai et al. (2001) analyze the role of natural language conversational interfaces in online sales, demonstrating that conversational agents significantly improve user engagement and task completion. Although focused on e-commerce, the findings are transferable to healthcare chatbots, where conversational clarity and user trust are critical for effective interaction.
+In [9], Advancing language-specific healthcare solutions, Polignano et al. (2020) introduce HealthAssistantBot, a personal health assistant designed for the Italian language. Their system integrates natural language processing with health knowledge bases to deliver personalized responses. The study confirms that culturally and linguistically adapted chatbots enhance user satisfaction and effectiveness in healthcare contexts. 
+In [10], Rauv (2023) explores the broader impact of technology in healthcare, identifying benefits such as improved efficiency, patient-centered care, and enhanced data-driven decision-making. The study also cautions against challenges related to data privacy, ethical responsibility, and system reliability, which are particularly critical in mental health applications.
+  
+III. METHODOLOGY
+
+The proposed system follows a muilty-staged structured system, designed for psychological well-being and provide personalized mental health Assistant using artificial intelligence. The overall architecture is divided into three steps: psychological assessment, personalized AI assistance, and stress-relief entertainment engagement.
+1. Psychological Assessment Phase
+In this stage it focuses on assessing the psychology of the individual by the series of questions asked in test format these questions will be in multiple answers, text input these questions will determine the view of individual toward the society, his wisdom on the situation’s emotional stability.
+The responses obtained from the assessment are pre-processed and encoded into structured formats suitable for machine learning models. This processed data is then used to generate an individualized psychological profile. To ensure data security and user privacy, all assessment data is encrypted before storage and further processing.
+2. Personalized AI Assistant Phase
+In the second phase, a pre-trained Large Language Model (LLM) is employed to generate a personalized AI assistant based on the user’s psychological profile. The LLM is fine-tuned or contextually adapted using the assessment results to align its conversational behavior, tone, and support strategies with the individual’s emotional needs and personality traits.
+The AI assistant engages users through natural language interactions, providing emotional support, stress management techniques, motivational guidance, and decision-support suggestions. It actively participates in conversations, monitors emotional cues, and encourages healthy coping behaviors. This phase emphasizes empathetic communication, personalization, and continuous adaptation based on user interactions while maintaining strict privacy and security protocols.
+3. Stress-Relief and Engagement Phase
+The final phase integrates interactive entertainment and stress-relief activities designed to promote relaxation and emotional balance. These activities include simple games, mindfulness exercises, and engagement-based modules that help users divert negative thoughts and reduce mental fatigue. The selection of activities is personalized based on the user’s psychological profile and interaction history.
+This phase acts as a supplementary support mechanism, reinforcing positive emotional states and providing a healthy outlet for stress. User engagement metrics are monitored to refine activity recommendations and improve effectiveness over time.
+                                    
+                      Flow Chart 1: Use Case Diagram
+Flow Chart 1 represents the use case and pictorial representation of actors in the project.
+ 
+Flow Chart 2: Activity Diagram
+
+
+ 
+          Flow chart 3: Methodology of proposed system
+Flow chart 3 represents the working of the system in step-by-step format 
+IV. RESULTS AND DISCUSSIONS
+The proposed AI-based personalized mental health support system was implemented and evaluated using a prototype environment with student users as the primary target group. The system successfully completed all three functional stages: psychological assessment, personalized AI assistance, and stress-relief engagement.
+During the psychological assessment phase as shown in figure 1, users were able to complete structured questionnaires without difficulty, and the system effectively generated individualized psychological profiles based on their responses. The preprocessing and encryption mechanisms ensured secure handling of sensitive user data, maintaining privacy and data integrity throughout the process.
+In the personalized AI assistant phase, the system demonstrated the ability to adapt conversational tone, response style, and support strategies according to the user’s psychological profile. Users reported improved comfort in expressing emotions and engaging in conversations with the AI assistant. The assistant effectively provided stress-coping suggestions, emotional reassurance, and motivational guidance based on user interactions.
+The stress-relief and engagement phase showed positive user participation, with increased interaction time in relaxation activities and games. Users indicated that these activities helped reduce immediate stress levels and improved overall mood. Feedback analysis suggested that the integration of entertainment-based modules enhanced user engagement and contributed to sustained system usage.
+User Input	AI Assistant Response	Profile Context
+"I have three assignments due tomorrow and I haven't started any of them. I feel overwhelmed."	"It sounds like you're dealing with a lot right now. Let's break this down together. Which assignment is worth the most points or has the nearest deadline? Sometimes focusing on one task at a time makes things feel more manageable. Would it help to create a quick priority list?"	High stress sensitivity, prefers structured guidance
+"I don't feel like talking today."	"That's completely okay. You don't have to talk if you're not ready. I'm here whenever you need me. Would you like to try one of the relaxation exercises instead, or would you prefer some quiet time?"	Introverted profile, respects autonomy
+
+      
+Figure 1
+
+ 
+Figure 2
+  
+Figure 3
+REFERENCES 
+
+[1]	M. Sharif and D. Uckelmann, "Multi-Modal LA in Personalized Education Using Deep Reinforcement Learning Based Approach," in IEEE Access, vol. 12, pp. 54049-54065, 2024, doi: 10.1109/ACCESS.2024.3388474. 
+[2]	S. R. Rahimi, A. T. Mozhdehi and M. Abdolahi, "An overview on extractive text summarization," 2017 IEEE 4th International Conference on Knowledge-Based Engineering and Innovation (KBEI), Tehran, Iran, 2017, pp. 0054-0062, doi: 10.1109/KBEI.2017.8324874. 
+[3]	M. A. Khadija, A. Aziz and W. Nurharjadmo, "Automating 
+Information Retrieval from Faculty Guidelines: Designing a PDFDriven Chatbot powered by OpenAI ChatGPT," 2023 International Conference on Computer, Control, Informatics and its Applications (IC3INA), Bandung, Indonesia, 2023, pp. 394-399, doi: 10.1109/IC3INA60834.2023.10285808. 
+[4]	O. M. S, J. J. P, J. O. A and K. T R, "AI Based Chatbot for Educational Institutions," 2024 Ninth International Conference on Science Technology Engineering and Mathematics (ICONSTEM), 
+	Chennai, 	India, 	2024, 	pp. 	1-7, 	doi: 
+10.1109/ICONSTEM60960.2024.10568662. 
+[5]	A. Mahroof, V. Gamage, K. Rajendran, S. Rajkumar, S. Rajapaksha and D. Wijendra, "An AI based Chatbot to Self-Learn and Self-Assess Performance in Ordinary Level Chemistry," 2020 2nd International Conference on Advancements in Computing (ICAC), Malabe, Sri Lanka, 2020, pp. 216-221, doi: 10.1109/ICAC51239.2020.9357131. 
+[6]	L. G. F. da Frota et al., "Edubot Project: Post-pandemic remodeling of in-person robotics classes," 2022 Latin American Robotics Symposium (LARS), 2022 Brazilian Symposium on Robotics (SBR), and 2022 Workshop on Robotics in Education (WRE), São Bernardo do Campo, Brazil, 2022, pp. 1-6, doi: 
+10.1109/LARS/SBR/WRE56824.2022.9995734. 
+[7]	B. Potsaid and J. T. Wen, "Edubot: a reconfigurable kit for control education. I. Mechanical design," Proceedings of the 2000. IEEE International Conference on Control Applications. Conference Proceedings (Cat. No.00CH37162), Anchorage, AK, USA, 2000, pp. 50-55, doi: 10.1109/CCA.2000.897398. 
+[8]	R. Baptista, M. Moreira, R. Lima and M. Bernardes, "Project Edubot: Teaching Robotics to High School Students," 2018 Latin American Robotic Symposium, 2018 Brazilian Symposium on Robotics (SBR) and 2018 Workshop on Robotics in Education (WRE), João Pessoa, 
+	Brazil, 	2018, 	pp. 	598-603, 	doi: 
+10.1109/LARS/SBR/WRE.2018.00108. 
+[9]	J. J. Sophia and T. P. Jacob, "EDUBOT-A Chatbot for Education in Covid-19 Pandemic and VQAbot Comparison," 2021 Second International Conference on Electronics and Sustainable 
+Communication Systems (ICESC), Coimbatore, India, 2021, pp. 17071714, doi: 10.1109/ICESC51422.2021.9532611. 
+[10]	A. Goel, Satyam and S. Sharma, "Artificial Intelligence based Healthcare Chat Bot System," 2023 8th International Conference on Communication and Electronics Systems (ICCES), Coimbatore, India, 2023, pp. 1362-1366, doi: 10.1109/ICCES57224.2023.10192727.
+[11]	Hodges, A. (2014). Alan Turing: The enigma (Updated ed.). Princeton University Press. 
+[12]	Holmes, W., Bialik, M., & Fadel, C. (2019). Artificial intelligence in education: Promises and implications for teaching and learning. Boston, MA: Center for Curriculum Redesign.
+[13]	Izacard, G., & Grave, E. (2021). Leveraging passage retrieval with generative models for open domain question answering. In Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics (pp. 874–880). 
+[14]	Ji, Z., Lee, N., Frieske, R., Yu, T., Su, D., Xu, Y., & Fung, P. (2023). Survey of hallucination in natural language generation. ACM Computing Surveys, 55(12), 1–38.
+[15]	Johnson, J., Douze, M., & Jégou, H. (2019). Billion-scale 
+similarity search with GPUs. IEEE Transactions on Big Data, 7(3), 535–547.  
+[16]	Jurafsky, D., & Martin, J. H. (2000). Speech and language processing: An introduction to natural language processing, computational linguistics, and speech recognition. Prentice Hall.
+[17]	Li Lei and Pitts Jennifer P. Does It Really Matter? Using Virtual Office Hours to Enhance Student-Faculty Interaction. Journal of Information Systems Education, 20:175–186, 2009.
+[18]	Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Ku¨ttler, Mike Lewis, Wen-tau Yih, Tim Rockt¨aschel, et al. Retrieval-augmented generation for knowledge-intensive NLP tasks. Advances in Neural Information Processing Systems, 33:9459–9474, 2020.
+[19]	Rongxin Liu, Carter Zenke, Charlie Liu, Andrew Holmes, Patrick.
+[20]	Thornton, and David J. Malan. Teaching CS50 with AI: Leveraging Generative Artificial Intelligence in Computer Science Education. In Proceedings of the 55th ACM Technical Symposium on Computer Science Education V. 1, SIGCSE 2024, USA, 2024. ACM.
+[21]	Yi Liu, Lianzhe Huang, Shicheng Li, Sishuo Chen, Hao Zhou, Fandong Meng, Jie Zhou, and Xu Sun. RECALL: A Benchmark for LLMs Robustness against External Counterfactual Knowledge. arXiv preprint arXiv:2311.08147, 2023.
+[22]	Tommy MacWilliam and David J. Malan. Scaling Office Hours: Managing Live Q&A in Large Courses. J. Comput. Sci. Coll., 28(3):94–101, Jan 2013.
+[23]	Zhang, S.; Roller, S.; Goyal, N.; Artetxe, M.; Chen, M.; Chen, S.; Dewan, C.; Diab, M.; Li, X.; Lin, X.V.; et al. Opt: Open pre-trained transformer language models. arXiv 2022, arXiv:2205.01068.
+[24]	Papineni, K.; Roukos, S.; Ward, T.; Zhu, W.J. Bleu: A Method for Automatic Evaluation of Machine Translation. In Proceedings of the 40th Annual Meeting of the Association for Computational Linguistics, Philadelphia, PA, USA, 6–12 July 2002; Isabelle, P., Charniak, E., Lin, D., Eds.; Association for Computational Linguistics: Philadelphia, PA, USA, 2002; pp. 311–318.
+[25]	Lin, C.Y. ROUGE: A Package for Automatic Evaluation of Summaries. In Proceedings of the Text Summarization Branches Out, Barcelona, Spain, 25–26 July 2004.
+[26]	Banerjee, S.; Lavie, A. METEOR: An Automatic Metric for MT Evaluation with Improved Correlation with Human Judgments. In Proceedings of the ACL Workshop on Intrinsic and Extrinsic Evaluation Measures for Machine Translation and/or Summarization, Ann Arbor, MI, USA, 29 June 2005.
+[27]	Wang, W.; Wei, F.; Dong, L.; Bao, H.; Yang, N.; Zhou, M. MiniLM: Deep Self-Attention Distillation for Task-Agnostic Compression of Pre-Trained Transformers. arXiv 2020, arXiv:2002.10957.
+[28]	Joshi, B.; Shah, N.; Barbieri, F.; Neves, L. The Devil is in the Details: Evaluating Limitations of Transformer-based Methods for Granular Tasks. In Proceedings of the 28th International Conference on Computational Linguistics, Barcelona, Spain, 8–13 December 2020; Scott, D., Bel, N., Zong, C., Eds.; International Committee on Computational Linguistics: Barcelona, Spain, 2020.
+[29]	Taori, R.; Gulrajani, I.; Zhang, T.; Dubois, Y.; Li, X.; Guestrin, C.; Liang, P.; Hashimoto, T.B. Stanford Alpaca: An Instruction Following Llama Model. 2023. Available online: https://github.com/tatsu-lab/stanford_alpaca (accessed on 12 March 2024).
+[30]	Voidful. Context Only Question Generator. 2024. Available online: https://huggingface.co/voidful/context-only-questiongenerator (accessed on 1 January 2024). 
+  

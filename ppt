@@ -1,0 +1,104 @@
+NeuroWell Conversational Agent for Student Mental Health(NeuroWell-CA)​
+GUIDE- DR. G. LALITHA KUMARI, SR. ASSIST. PROFESSOR​
+​
+Team Members:​
+Chinthalapati Sri Venkata Sai Subrahmanyam – 22501A0533​
+Aakash Kodali – 22501A0501​
+Abdul Azeez – 22501A0502​
+Abdul Jabbar - 22501A0503​
+
+Content
+Problem Statement
+Research Gap / Limitations of Existing Approaches
+Abstract
+Introduction
+Objectives
+Literature Survey
+Base Paper Summary
+Requirements
+Input Dataset
+Methodology / Proposed Work
+Conclusion & Future Scope
+
+Problem Statement
+Mental health concerns among students are rising rapidly, affecting their academic performance, emotional balance, and overall quality of life. However, due to stigma, lack of awareness, and the shortage of trained professionals, many students do not receive timely support. While existing AI-based chatbots like Woebot and Wysa have shown the potential of delivering CBT digitally, they often lack personalization, cultural sensitivity, long-term engagement, and strong privacy safeguards, making them inadequate for the sensitive needs of student populations. This creates a critical need for a Large Language Model (LLM)-based, student-centric mental health chatbot that can deliver empathetic, adaptive, and secure interactions, along with risk detection and escalation mechanisms to ensure safety and reliability.
+
+Research Gap / Limitations of Existing Approaches
+ Limited Personalization– Current chatbots provide generic CBT responses, not tailored to student-specific contexts. 
+Lack of Long-Term Engagement– Most solutions show effectiveness only in short-term trials (2–8 weeks). 
+Privacy & Security Concerns– Sensitive mental health data is often stored without strong anonymization or encryption. 
+Cultural & Contextual Insensitivity– Existing tools fail to adapt to diverse student backgrounds and cultural needs.
+Inadequate Risk Handling– Few systems include reliable crisis detection and escalation mechanisms. 
+Small-Scale Validation– Prior studies use limited datasets and participants, reducing generalizability. 
+Abstract
+Student mental health challenges are rising, but stigma, lack of awareness, and limited counselor access hinder timely support. Prior studies (ScienceDirect, 2023; Springer, 2025) highlight AI and chatbots as promising but limited by personalization, safety, and long-term validation. Existing tools like Woebot and Wysa provide CBT digitally but lack cultural sensitivity and robust privacy. To address these gaps, we propose a Large Language Model (LLM)-based AI chatbot tailored for students, leveraging domain-specific datasets, sentiment and risk detection, and instruction-tuned LLMs. The system integrates a multi-level safety framework with anonymized data, emotional tracking, and escalation to professionals for high-risk cases. Operating 24/7, anonymously, and securely, it ensures early intervention, reduced stigma, and improved access — building a next-generation framework for AI-driven student mental health support.
+
+Introduction
+ Mental health plays a crucial role in student well-being and academic performance. 
+Barriers like stigma, lack of awareness, and shortage of counselors prevent students from seeking timely help. 
+AI and chatbot technologies are emerging as cost-effective, 24/7, and anonymous support systems. 
+Existing solutions provide generic CBT interventions but are not fully tailored to student needs. 
+This project focuses on building a student-centric, intelligent chatbot to provide empathetic, personalized, and accessible mental health support. 
+
+Objectives
+To design an AI-powered chatbot focused on student mental health. 
+To provide empathetic, personalized, and context-aware conversations using NLP and sentiment analysis. 
+To ensure privacy-preserving interaction with secure data handling. 
+To enable adaptive mood tracking and early risk detection of stress, anxiety, or depression. 
+To integrate an escalation mechanism that connects high-risk students with counselors or support services. 
+To create a 24/7, anonymous, and scalable support system tailored for educational institutions. 
+
+
+Input Dataset
+Sources
+Pre-trained LLMs: GPT, LLaMA-2, Falcon
+Student mental health surveys: PHQ-9, GAD-7, academic stress scales
+Public conversational datasets: Reddit Mental Health, Kaggle chat datasets
+Expert-curated counselor–student dialogues
+Attributes
+Demographics: Age, Gender, Year of Study
+Conversations: Student queries, chatbot responses
+Sentiment/Emotion: Stress, Anxiety, Depression labels
+Clinical Scores: PHQ-9, GAD-7 values
+
+
+Literature Survey
+Enhancing Mental Health with Artificial Intelligence (ScienceDirect, 2023) - Applied ML & NLP for detection and therapy personalization- AI enables early detection and personalized recommendations- Achieved high accuracy in detecting depression/anxiety; improved personalization compared to surveys- Limited clinical validation; privacy & bias concerns
+Chatbots & Mental Health: A Scoping Review of Reviews (Springer, 2025) - Synthesized 17 review studies of chatbots -Chatbots improve accessibility & satisfaction- Some studies showed outcomes comparable to human therapists in mild/moderate cases- Small sample sizes; lack of long-term trial
+
+Base Paper Summary
+1. Enhancing Mental Health with Artificial Intelligence (ScienceDirect, 2023) 
+Explores AI applications (ML & NLP) for mental health prediction and personalized therapy. 
+Shows high accuracy in early detection of depression and anxiety. 
+Highlights concerns of privacy, bias, and limited clinical validation. 
+2. Chatbots and Mental Health: A Scoping Review of Reviews (Springer, 2025) 
+Synthesizes 17 review studies on mental health chatbots. 
+Finds chatbots improve accessibility, satisfaction, and short-term outcomes. 
+Notes small sample sizes, lack of long-term trials, and safety gaps as key limitations. 
+
+Requirements
+Software:
+Python, PyTorch/TensorFlow, Hugging Face Transformers
+RASA / LangChain (dialogue management)
+Flask / React (backend), MongoDB (storage)
+Hardware:
+Training: i5/i7 CPU, 16GB RAM and above, GPU (RTX 3050 / A100)
+Deployment: i5/i7 CPU, 8–16GB RAM, Cloud hosting
+Dataset:
+Pre-trained LLMs (GPT, LLaMA-2, Falcon)
+Student mental health surveys (PHQ-9, GAD-7)
+Public conversational datasets (Reddit, Kaggle)
+Other:
+APIs: Sentiment analysis, Crisis hotline integration
+Privacy: End-to-end encryption, anonymized storage
+
+Conclusion & Future Scope
+Conclusion 
+The proposed LLM-based chatbot offers a 24/7, anonymous, and personalized support system for student mental health. By integrating sentiment analysis, risk detection, and safety mechanisms, it ensures empathetic and secure interactions while reducing the burden on counselors. This work lays the foundation for a next generation, publishable framework in AI-driven mental health care. 
+
+Future Scope 
+Integration with wearable devices for real-time stress and mood monitoring. 
+Development of a multilingual chatbot to support global student populations. 
+Including of Personalized diary writing space.
+Conducting large-scale randomized controlled trials (RCTs) to validate clinical effectiveness. 
+

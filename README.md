@@ -1,0 +1,565 @@
+# NeurowellCA - Complete Rebuild Documentation
+
+## 🎉 Architectural Overhaul Complete
+
+This document describes the complete rebuild of NeurowellCA with modern technologies.
+
+---
+
+## 🏗️ New Architecture
+
+### **Backend: FastAPI + Uvicorn**
+- **Framework**: FastAPI 0.109.0 (Python 3.11+)
+- **Server**: Uvicorn with ASGI
+- **Port**: 8000
+- **Command**: `python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000`
+
+### **Database: PostgreSQL + Qdrant**
+- **Primary DB**: PostgreSQL 15 (port 5432) - User data, assessments, conversations
+- **Vector DB**: Qdrant (port 6333) - Conversation embeddings for semantic search
+- **ORM**: SQLAlchemy 2.0 with async support (asyncpg)
+
+### **AI/ML Components**
+1. **Ollama LLM**: llama3.2:3b model (port 11434)
+2. **Sentence Transformers**: all-MiniLM-L6-v2 for embeddings (384 dimensions)
+3. **LSTM Model**: Chat summarization and title generation
+4. **Crisis Detection**: VADER sentiment analysis + keyword matching
+
+### **Frontend: Next.js** (Pending)
+- Framework: Next.js 14 with TypeScript
+- Port: 3000
+- Status: Requires manual setup
+
+---
+
+## 📁 New Project Structure
+
+```
+NeurowellCA/
+├── backend/
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── main.py              # FastAPI application
+│   │   │   └── routes/
+│   │   │       ├── auth.py          # JWT authentication
+│   │   │       ├── chat.py          # Chat with Ollama & Qdrant
+│   │   │       ├── assessment.py    # PHQ-9/GAD-7 assessments
+│   │   │       ├── dashboard.py     # User analytics
+│   │   │       └── admin.py         # Database admin panel
+│   │   ├── models/
+│   │   │   ├── database.py          # Async SQLAlchemy setup
+│   │   │   └── models.py            # All database models
+│   │   ├── services/
+│   │   │   ├── qdrant_service.py    # Vector database operations
+│   │   │   └── crisis_service.py    # Crisis detection
+│   │   ├── ml_models/
+│   │   │   └── lstm_summarizer.py   # LSTM for chat titles
+│   │   └── utils/
+│   │       └── config.py            # Pydantic settings
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── .env
+├── frontend/ (TO BE REBUILT)
+├── data/
+│   ├── crisis_detection.json
+│   ├── mental_health_resources.json
+│   ├── ai_persona_config.json
+│   └── assessment_config.json
+├── docker-compose.yml               # All services orchestration
+└── PROJECT_IMPLEMENTATION_PLAN.md   # Original plan (kept)
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Start Database Services
+```bash
+cd NeurowellCA
+docker-compose up -d postgres ollama qdrant
+```
+
+### 2. Install Backend Dependencies
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 3. Configure Environment
+```bash
+cp .env.example .env
+# Edit .env with your settings
+```
+
+### 4. Start Backend
+```bash
+python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 5. Access API Documentation
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- Health Check: http://localhost:8000/health
+
+---
+
+## 📡 API Endpoints
+
+### Authentication (`/api/auth`)
+- `POST /register` - Create new user
+- `POST /login` - User login (returns JWT)
+- `GET /me` - Get current user info
+- `POST /refresh` - Refresh access token
+
+### Chat (`/api/chat`)
+- `POST /message` - Send message to AI
+- `GET /history/{session_id}` - Get conversation history
+- `GET /sessions` - Get all chat sessions with AI-generated titles
+- `DELETE /session/{session_id}` - Delete session
+
+### Assessment (`/api/assessments`)
+- `POST /submit` - Submit PHQ-9/GAD-7 assessment
+- `GET /history` - Get assessment history
+
+### Dashboard (`/api/dashboard`)
+- `GET /stats` - Get user statistics
+- `GET /trends` - Get assessment trends
+
+### Admin (`/api/admin`)
+- `GET /stats` - Database statistics
+- `GET /users` - List all users (paginated)
+- `GET /conversations` - List conversations (with filters)
+- `GET /assessments` - List assessments (with filters)
+- `GET /tables` - Get table information
+- `GET /query` - Execute custom SQL queries (SELECT only)
+
+---
+
+## 🗄️ Database Schema
+
+### Users Table
+- id, username, email, password_hash
+- full_name, age, guardian_contact
+- has_completed_initial_assessment (boolean)
+- created_at, last_login
+
+### Assessments Table
+- PHQ-9 score (0-27) with individual question answers
+- GAD-7 score (0-21) with individual question answers
+- Stress level (0-10)
+- Risk level (low/mild/moderate/moderately_severe/severe)
+- Timestamps
+
+### Conversations Table
+- message_text, sender (user/ai)
+- session_id for grouping
+- crisis_detected (boolean)
+- sentiment_score
+- vector_id (Qdrant reference)
+
+### Chat Sessions Table
+- session_id, user_id
+- title (AI-generated by LSTM)
+- summary (AI-generated)
+- message_count, timestamps
+
+### Crisis Logs Table
+- message_text, crisis_score
+- keywords_detected, action_taken
+- resolved (boolean)
+
+### Guardian Alerts Table
+- guardian_contact, alert_sent
+- alert_method (whatsapp/sms/email)
+- message_sent, response_received
+
+### Game Progress Table
+- total_points, level
+- conversations_count, assessments_completed
+- streak_days, badges (JSON)
+
+---
+
+## 🤖 AI Features
+
+### 1. Ollama Chat Integration
+- Model: llama3.2:3b
+- Context-aware responses using conversation history
+- Crisis-aware messaging
+
+### 2. Qdrant Vector Search
+- Semantic search across conversations
+- 384-dimensional embeddings (sentence-transformers)
+- Session context retrieval
+- Similar conversation finding
+
+### 3. LSTM Title Generation
+- Automatic chat session title generation
+- Fallback to rule-based titles
+- Vocabulary: 24 mental health keywords
+- Expandable with training
+
+### 4. Crisis Detection
+- VADER sentiment analysis
+- Keyword matching (suicide, self-harm, severe depression)
+- Crisis score calculation
+- Resource recommendations
+
+---
+
+## 🔧 Configuration (.env)
+
+```env
+# Application
+DEBUG=False
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret
+
+# PostgreSQL
+DATABASE_URL=postgresql://neurowellca_user:neurowellca_password_2026@localhost:5432/neurowellca_db
+
+# Qdrant
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=
+
+# Ollama
+OLLAMA_API_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2:3b
+
+# Twilio (optional)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_WHATSAPP_FROM=
+```
+
+---
+
+## 🐳 Docker Services
+
+### PostgreSQL
+- Port: 5432
+- Health check enabled
+- Persistent volume: `postgres_data`
+
+### Ollama
+- Port: 11434
+- GPU support configured (optional)
+- Persistent volume: `ollama_data`
+- Pull model: `docker exec -it neurowellca-ollama ollama pull llama3.2:3b`
+
+### Qdrant
+- HTTP Port: 6333
+- gRPC Port: 6334
+- Persistent volume: `qdrant_data`
+- Dashboard: http://localhost:6333/dashboard
+
+### Backend (Future)
+- Port: 8000
+- Auto-restart enabled
+- Hot-reload development mode
+
+### Frontend (Future)
+- Port: 3000
+- Next.js development server
+
+---
+
+## 📊 Database Admin Panel
+
+Access via API endpoints at `/api/admin/*`
+
+**Features:**
+- View all users, conversations, assessments
+- Database statistics
+- Custom SQL queries (SELECT only for security)
+- Table information
+- Pagination support
+
+**Example Usage:**
+```bash
+# Get database stats
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:8000/api/admin/stats
+
+# Get recent conversations
+curl -H "Authorization: Bearer YOUR_TOKEN" "http://localhost:8000/api/admin/conversations?limit=50"
+
+# Get users
+curl -H "Authorization: Bearer YOUR_TOKEN" "http://localhost:8000/api/admin/users?limit=20"
+
+# Custom query
+curl -H "Authorization: Bearer YOUR_TOKEN" "http://localhost:8000/api/admin/query?query=SELECT%20COUNT%28%2A%29%20FROM%20users"
+```
+
+---
+
+## 🛠️ Development Workflow
+
+### Backend Development
+```bash
+cd backend
+python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+- Auto-reload on code changes
+- Logs printed to console
+- Swagger docs at /docs
+
+### Database Migrations
+```bash
+# Reset database (caution: deletes all data)
+docker exec -it neurowellca-postgres psql -U neurowellca_user -d neurowellca_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+# Backend will auto-create tables on next startup
+```
+
+### Testing Ollama
+```bash
+# List models
+docker exec -it neurowellca-ollama ollama list
+
+# Pull model
+docker exec -it neurowellca-ollama ollama pull llama3.2:3b
+
+# Test generation
+docker exec -it neurowellca-ollama ollama run llama3.2:3b "Hello, how are you?"
+```
+
+### Qdrant Operations
+```bash
+# Check collections
+curl http://localhost:6333/collections
+
+# Get collection info
+curl http://localhost:6333/collections/neurowellca_conversations
+
+# Search (requires point IDs)
+curl -X POST http://localhost:6333/collections/neurowellca_conversations/points/scroll -H "Content-Type: application/json" -d '{"limit": 10}'
+```
+
+---
+
+## 🔐 Authentication Flow
+
+1. **Register**: `POST /api/auth/register`
+   - Returns user info (no auto-login)
+
+2. **Login**: `POST /api/auth/login`
+   - Returns: `access_token`, `refresh_token`, `requires_assessment`
+   - If `requires_assessment: true` → redirect to assessment
+   - If `false` → redirect to chat
+
+3. **Protected Routes**:
+   - Include header: `Authorization: Bearer <access_token>`
+   - Token expires in 60 minutes
+
+4. **Refresh**: `POST /api/auth/refresh`
+   - Send `refresh_token` to get new `access_token`
+
+---
+
+## 📈 Assessment Flow
+
+### Initial Assessment (Mandatory)
+1. User registers
+2. Login returns `requires_assessment: true`
+3. User completes PHQ-9 (9 questions) + GAD-7 (7 questions) + Stress (0-10)
+4. Backend calculates risk level
+5. Sets `user.has_completed_initial_assessment = True`
+6. User can access chat
+
+### Follow-up Assessments
+- Accessible anytime via `/api/assessments/submit`
+- Tracked in assessment history
+- Used for dashboard trends
+
+---
+
+## 🎯 Key Improvements Over Previous Architecture
+
+| Feature | Before (Flask) | After (FastAPI) |
+|---------|---------------|-----------------|
+| API Framework | Flask (WSGI) | FastAPI (ASGI) |
+| Performance | Synchronous | Async/Await |
+| API Docs | Manual | Auto-generated (Swagger/ReDoc) |
+| Type Safety | Minimal | Full (Pydantic) |
+| Database | PostgreSQL only | PostgreSQL + Qdrant vectors |
+| Embeddings | None | Sentence Transformers |
+| LSTM | None | Chat title generation |
+| Admin Panel | None | Full REST API |
+| Port | 5000 | 8000 |
+| SSL | Self-signed | Ready for production SSL |
+
+---
+
+## ⚠️ Known Limitations
+
+1. **Frontend**: Requires complete Next.js rebuild
+2. **LSTM Model**: Using untrained model with rule-based fallback
+3. **Twilio**: Not configured (optional feature)
+4. **SSL**: Development mode (no HTTPS yet)
+5. **Authentication**: Basic JWT (no OAuth/SSO)
+6. **Testing**: No automated tests yet
+
+---
+
+## 🔮 Next Steps
+
+### Immediate (Critical)
+1. **Rebuild Frontend with Next.js**
+   - Install: `npx create-next-app@latest frontend --typescript --tailwind`
+   - Create modular components
+   - Implement pages: login, register, assessment, chat, dashboard
+   - Connect to FastAPI backend (port 8000)
+
+2. **Test Complete Flow**
+   - Registration → Login → Assessment → Chat
+   - Verify Ollama responses
+   - Test Qdrant vector search
+   - Validate crisis detection
+
+### Short-term
+3. **Train LSTM Model**
+   - Collect conversation data
+   - Train title generation model
+   - Save model weights
+
+4. **Add Tests**
+   - pytest for backend routes
+   - Integration tests for AI pipeline
+   - Frontend component tests
+
+### Medium-term
+5. **Production Deployment**
+   - Configure proper SSL certificates
+   - Set up environment variables
+   - Docker Compose production config
+   - CI/CD pipeline
+
+6. **Enhanced Features**
+   - Twilio WhatsApp integration
+   - Email notifications
+   - Advanced analytics dashboard
+   - Export data functionality
+
+---
+
+## 📝 Environment Setup Checklist
+
+- [x] Docker installed and running
+- [x] Python 3.11+ installed
+- [x] PostgreSQL container running (port 5432)
+- [x] Ollama container running (port 11434)
+- [x] Qdrant container running (port 6333)
+- [x] Ollama model pulled: `llama3.2:3b`
+- [x] Backend dependencies installed
+- [x] .env file configured
+- [x] Database schema created
+- [x] Qdrant collection created
+- [x] Backend running (port 8000)
+- [ ] Frontend Next.js setup
+- [ ] Frontend connected to backend
+
+---
+
+## 🆘 Troubleshooting
+
+### Backend won't start
+```bash
+# Check if port 8000 is in use
+netstat -ano | findstr :8000
+
+# Check Docker services
+docker-compose ps
+
+# Check logs
+docker-compose logs postgres
+docker-compose logs ollama
+docker-compose logs qdrant
+```
+
+### Database connection error
+```bash
+# Restart PostgreSQL
+docker-compose restart postgres
+
+# Check connection
+docker exec -it neurowellca-postgres psql -U neurowellca_user -d neurowellca_db -c "SELECT 1;"
+```
+
+### Ollama not responding
+```bash
+# Check model exists
+docker exec -it neurowellca-ollama ollama list
+
+# Pull model if missing
+docker exec -it neurowellca-ollama ollama pull llama3.2:3b
+
+# Test directly
+curl -X POST http://localhost:11434/api/generate -d '{"model":"llama3.2:3b","prompt":"Hello","stream":false}'
+```
+
+### Qdrant connection error
+```bash
+# Check Qdrant status
+curl http://localhost:6333/collections
+
+# Restart Qdrant
+docker-compose restart qdrant
+
+# Check logs
+docker logs neurowellca-qdrant
+```
+
+---
+
+## 📞 API Testing Examples
+
+### Register User
+```bash
+curl -X POST http://localhost:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","email":"test@example.com","password":"password123","full_name":"Test User","age":25}'
+```
+
+### Login
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"password123"}'
+```
+
+### Send Chat Message
+```bash
+curl -X POST http://localhost:8000/api/chat/message \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{"message":"I am feeling anxious today"}'
+```
+
+### Submit Assessment
+```bash
+curl -X POST http://localhost:8000/api/assessments/submit \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "phq9_answers":[1,2,1,0,1,2,1,0,1],
+    "gad7_answers":[2,1,2,1,1,0,1],
+    "stress_level":6
+  }'
+```
+
+---
+
+## 📄 License & Credits
+
+**NeurowellCA** - Mental Health Chatbot Platform
+- Developed for 4-2 Project
+- Technologies: FastAPI, PostgreSQL, Qdrant, Ollama, LSTM
+- AI Models: Llama 3.2, Sentence Transformers, VADER
+
+---
+
+**Last Updated**: January 22, 2026
+**Backend Status**: ✅ Operational (Port 8000)
+**Frontend Status**: ⏳ Pending Next.js Rebuild
+**Database**: ✅ PostgreSQL + Qdrant Running
+**AI Services**: ✅ Ollama + LSTM + Crisis Detection Active

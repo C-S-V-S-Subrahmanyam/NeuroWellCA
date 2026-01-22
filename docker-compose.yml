@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: neurowellca-postgres
+    environment:
+      POSTGRES_USER: neurowellca_user
+      POSTGRES_PASSWORD: neurowellca_password_2026
+      POSTGRES_DB: neurowellca_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - neurowellca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neurowellca_user -d neurowellca_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Ollama (Local LLM)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: neurowellca-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - neurowellca-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # For systems without GPU, remove the deploy section above
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: neurowellca-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - neurowellca-network
+    restart: unless-stopped
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+
+  # Backend API (FastAPI)
+  backend:
+    build: ./backend
+    container_name: neurowellca-backend
+    environment:
+      - DATABASE_URL=postgresql://neurowellca_user:neurowellca_password_2026@postgres:5432/neurowellca_db
+      - OLLAMA_API_URL=http://ollama:11434
+      - QDRANT_URL=http://qdrant:6333
+      - JWT_SECRET_KEY=your-secret-key-change-in-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    networks:
+      - neurowellca-network
+    restart: unless-stopped
+    command: python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+  # Frontend (Next.js)
+  frontend:
+    build: ./frontend
+    container_name: neurowellca-frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - neurowellca-network
+    restart: unless-stopped
+    command: npm run dev
+
+volumes:
+  postgres_data:
+    driver: local
+  ollama_data:
+    driver: local
+  qdrant_data:
+    driver: local
+
+networks:
+  neurowellca-network:
+    driver: bridge
