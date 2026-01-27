@@ -97,7 +97,7 @@ def generate_otp() -> str:
 
 
 def send_otp_email(email: str, otp: str) -> bool:
-    """Send OTP via email (mock implementation - configure SMTP in production)"""
+    """Send OTP via email using Gmail SMTP"""
     try:
         # Store OTP with expiration (5 minutes)
         otp_storage[email] = {
@@ -105,28 +105,77 @@ def send_otp_email(email: str, otp: str) -> bool:
             'expires_at': datetime.utcnow() + timedelta(minutes=5)
         }
         
-        logger.info(f"📧 OTP for {email}: {otp} (Mock - configure SMTP for production)")
+        # Check if SMTP is configured
+        if not settings.SMTP_PASSWORD:
+            logger.warning(f"⚠️ SMTP not configured. OTP for {email}: {otp}")
+            logger.info("To enable email sending:")
+            logger.info("1. Generate Gmail App Password at: https://myaccount.google.com/apppasswords")
+            logger.info("2. Set SMTP_PASSWORD in .env file")
+            return True  # Return True so registration can proceed
         
-        # TODO: Configure SMTP settings in production
-        # smtp_server = settings.SMTP_SERVER
-        # smtp_port = settings.SMTP_PORT
-        # smtp_user = settings.SMTP_USER
-        # smtp_password = settings.SMTP_PASSWORD
-        # 
-        # message = MIMEMultipart()
-        # message['From'] = smtp_user
-        # message['To'] = email
-        # message['Subject'] = 'NeuroWell - Email Verification OTP'
-        # 
-        # body = f"Your verification code is: {otp}\n\nThis code expires in 5 minutes."
-        # message.attach(MIMEText(body, 'plain'))
-        # 
-        # with smtplib.SMTP(smtp_server, smtp_port) as server:
-        #     server.starttls()
-        #     server.login(smtp_user, smtp_password)
-        #     server.send_message(message)
-        
-        return True
+        # Send actual email
+        try:
+            message = MIMEMultipart('alternative')
+            message['From'] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_USER}>"
+            message['To'] = email
+            message['Subject'] = '🧠 NeuroWellCA - Email Verification Code'
+            
+            # HTML email body
+            html_body = f"""
+            <html>
+              <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                  <h2 style="color: #4A90E2;">🧠 NeuroWellCA</h2>
+                  <h3>Email Verification</h3>
+                  <p>Your verification code is:</p>
+                  <div style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
+                    <h1 style="color: #4A90E2; letter-spacing: 5px; margin: 0;">{otp}</h1>
+                  </div>
+                  <p><strong>This code expires in 5 minutes.</strong></p>
+                  <p>If you didn't request this code, please ignore this email.</p>
+                  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
+                  <p style="font-size: 12px; color: #666;">NeuroWellCA - AI-Powered Mental Health Support Platform</p>
+                </div>
+              </body>
+            </html>
+            """
+            
+            # Plain text alternative
+            text_body = f"""
+            NeuroWellCA - Email Verification
+            
+            Your verification code is: {otp}
+            
+            This code expires in 5 minutes.
+            
+            If you didn't request this code, please ignore this email.
+            """
+            
+            # Attach both versions
+            part1 = MIMEText(text_body, 'plain')
+            part2 = MIMEText(html_body, 'html')
+            message.attach(part1)
+            message.attach(part2)
+            
+            # Send email
+            with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as server:
+                server.starttls()
+                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                server.send_message(message)
+            
+            logger.info(f"✅ OTP email sent successfully to {email}")
+            return True
+            
+        except smtplib.SMTPAuthenticationError:
+            logger.error("❌ SMTP Authentication failed. Check your Gmail App Password.")
+            logger.error("Generate App Password at: https://myaccount.google.com/apppasswords")
+            logger.warning(f"📧 Fallback - OTP for {email}: {otp}")
+            return True  # Still allow registration
+        except Exception as smtp_error:
+            logger.error(f"❌ SMTP Error: {smtp_error}")
+            logger.warning(f"📧 Fallback - OTP for {email}: {otp}")
+            return True  # Still allow registration
+            
     except Exception as e:
         logger.error(f"❌ Failed to send OTP: {e}")
         return False

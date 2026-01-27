@@ -55,6 +55,13 @@ class Settings(BaseSettings):
         "https://localhost:3000"
     ]
     
+    # Email/SMTP Configuration
+    SMTP_SERVER: str = Field(default="smtp.gmail.com", env="SMTP_SERVER")
+    SMTP_PORT: int = Field(default=587, env="SMTP_PORT")
+    SMTP_USER: str = Field(default="subrahmanyam310308@gmail.com", env="SMTP_USER")
+    SMTP_PASSWORD: str = Field(default="", env="SMTP_PASSWORD")  # Gmail App Password
+    SMTP_FROM_NAME: str = Field(default="NeuroWellCA", env="SMTP_FROM_NAME")
+    
     # Twilio WhatsApp
     TWILIO_ACCOUNT_SID: str = Field(default="", env="TWILIO_ACCOUNT_SID")
     TWILIO_AUTH_TOKEN: str = Field(default="", env="TWILIO_AUTH_TOKEN")

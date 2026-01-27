@@ -63,6 +63,13 @@ htmlcov/
 node_modules/
 package-lock.json
 
+# Next.js
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
 # OS
 Thumbs.db
 .DS_Store
