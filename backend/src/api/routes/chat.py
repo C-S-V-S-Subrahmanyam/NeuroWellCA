@@ -276,7 +276,7 @@ async def send_message_stream(
     )
 
 
-@router.post("/message", response_model=ChatResponse, dependencies=[Depends(require_permission("chat.create"))])
+@router.post("/message", response_model=ChatResponse)
 async def send_message(
     message_data: ChatMessage,
     current_user: User = Depends(get_current_user),
@@ -408,7 +408,7 @@ async def send_message(
         )
 
 
-@router.get("/history/{session_id}", dependencies=[Depends(require_permission("chat.view"))])
+@router.get("/history/{session_id}")
 async def get_chat_history(
     session_id: str,
     limit: int = 50,
@@ -464,7 +464,7 @@ async def get_chat_history(
         )
 
 
-@router.get("/sessions", response_model=List[ChatSessionInfo], dependencies=[Depends(require_permission("chat.view"))])
+@router.get("/sessions", response_model=List[ChatSessionInfo])
 async def get_chat_sessions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)

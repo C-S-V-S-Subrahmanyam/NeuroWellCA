@@ -1,10 +1,11 @@
 """
 Main FastAPI application entry point
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
+import time
 from contextlib import asynccontextmanager
 
 from src.api.routes import auth, chat, assessment, dashboard, admin, profile, permissions, feedback, llm_providers, settings_routes
@@ -12,7 +13,7 @@ from src.models.database import engine, Base
 from src.services.qdrant_service import qdrant_service
 from src.utils.config import settings
 
-# Configure logging
+# Configure logging with more detailed format
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -58,6 +59,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all HTTP requests"""
+    start_time = time.time()
+    
+    # Log request
+    logger.info(f"📥 {request.method} {request.url.path} - Client: {request.client.host}")
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Log response
+    process_time = time.time() - start_time
+    logger.info(f"📤 {request.method} {request.url.path} - Status: {response.status_code} - Time: {process_time:.3f}s")
+    
+    return response
 
 
 # Health check endpoint

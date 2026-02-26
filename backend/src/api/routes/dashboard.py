@@ -96,7 +96,7 @@ async def get_dashboard_stats(
         raise HTTPException(status_code=500, detail="Failed to retrieve statistics")
 
 
-@router.get("/trends", response_model=List[AssessmentTrend], dependencies=[Depends(require_permission("assessment.view_own"))])
+@router.get("/trends", response_model=List[AssessmentTrend])
 async def get_assessment_trends(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)

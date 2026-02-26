@@ -134,21 +134,11 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="flex" style={{height: 'calc(100vh - 4rem)'}}>
       {/* Sidebar */}
       <aside className="w-80 bg-white/80 backdrop-blur-xl border-r border-gray-200/50 flex flex-col shadow-xl">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200/50">
-          <div className="flex items-center gap-3 mb-5">
-            <img 
-              src="/logo.PNG" 
-              alt="NeuroWell" 
-              className="w-11 h-11 rounded-xl object-cover shadow-lg ring-2 ring-blue-500/20" 
-            />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              NeuroWell CA
-            </span>
-          </div>
+        {/* New Chat Button */}
+        <div className="p-4">
           <button
             onClick={handleNewChat}
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"

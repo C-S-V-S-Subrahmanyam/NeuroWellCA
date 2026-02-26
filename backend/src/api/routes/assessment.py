@@ -55,7 +55,7 @@ def calculate_risk_level(phq9_score: int, gad7_score: int, stress_level: int) ->
         return RiskLevel.LOW
 
 
-@router.post("/submit", response_model=AssessmentResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("assessment.create"))])
+@router.post("/submit", response_model=AssessmentResponse, status_code=status.HTTP_201_CREATED)
 async def submit_assessment(
     assessment_data: AssessmentSubmit,
     current_user: User = Depends(get_current_user),
@@ -137,7 +137,7 @@ async def submit_assessment(
         )
 
 
-@router.get("/history", response_model=List[AssessmentResponse], dependencies=[Depends(require_permission("assessment.view_own"))])
+@router.get("/history", response_model=List[AssessmentResponse])
 async def get_assessment_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
