@@ -9,14 +9,14 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50">
       {/* Navigation */}
       <nav className="glass-effect fixed w-full top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <Image src="/logo.png" alt="NeuroWell Logo" width={50} height={50} />
-              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <Image src="/logo.PNG" alt="NeuroWell Logo" width={50} height={50} />
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">
                 NeuroWell
               </span>
             </div>
@@ -48,7 +48,7 @@ export default function HomePage() {
           </div>
           
           <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-700 via-sky-600 to-cyan-600 bg-clip-text text-transparent">
               Your Mental Health
             </span>
             <br />
@@ -78,19 +78,19 @@ export default function HomePage() {
           {/* Stats */}
           <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="glass-effect p-6 rounded-2xl card-hover">
-              <div className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <div className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent mb-2">
                 24/7
               </div>
               <div className="text-gray-600">Always Available Support</div>
             </div>
             <div className="glass-effect p-6 rounded-2xl card-hover">
-              <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              <div className="text-4xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent mb-2">
                 100%
               </div>
               <div className="text-gray-600">Confidential & Secure</div>
             </div>
             <div className="glass-effect p-6 rounded-2xl card-hover">
-              <div className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-2">
+              <div className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-2">
                 AI
               </div>
               <div className="text-gray-600">Powered Insights</div>
@@ -272,7 +272,7 @@ export default function HomePage() {
       <footer className="py-12 px-6 border-t border-gray-200">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <Image src="/logo.png" alt="NeuroWell" width={40} height={40} />
+            <Image src="/logo.PNG" alt="NeuroWell" width={40} height={40} />
             <span className="text-xl font-bold text-gray-900">NeuroWell</span>
           </div>
           <p className="text-gray-600 mb-4">

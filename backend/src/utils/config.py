@@ -39,8 +39,15 @@ load_dotenv()
 def load_toml_config(config_path: Optional[str] = None) -> dict:
     """Load configuration from TOML file"""
     if config_path is None:
-        # Look for config.toml in project root (3 levels up from this file)
-        config_path = Path(__file__).parent.parent.parent.parent / "config.toml"
+        # Look for config.toml in project root
+        # In Docker: /app/config.toml
+        # In local dev: 3 levels up from this file
+        docker_path = Path("/app/config.toml")
+        if docker_path.exists():
+            config_path = docker_path
+        else:
+            # Local development path (3 levels up from this file)
+            config_path = Path(__file__).parent.parent.parent.parent / "config.toml"
     else:
         config_path = Path(config_path)
     
@@ -108,13 +115,6 @@ class Settings(BaseSettings):
     
     # CORS
     CORS_ORIGINS: List[str] = Field(default=_toml_config["cors"]["origins"])
-    
-    # Email/SMTP Configuration (Secrets loaded from .env)
-    SMTP_SERVER: str = Field(default=_toml_config["email"]["smtp_server"], env="SMTP_SERVER")
-    SMTP_PORT: int = Field(default=_toml_config["email"]["smtp_port"], env="SMTP_PORT")
-    SMTP_USER: str = Field(default=_toml_config["email"]["smtp_user"], env="SMTP_USER")
-    SMTP_PASSWORD: str = Field(default=_toml_config["email"]["smtp_password"], env="SMTP_PASSWORD")
-    SMTP_FROM_NAME: str = Field(default=_toml_config["email"]["from_name"], env="SMTP_FROM_NAME")
     
     # Twilio WhatsApp (Secrets loaded from .env)
     TWILIO_ACCOUNT_SID: str = Field(default=_toml_config["whatsapp"]["account_sid"], env="TWILIO_ACCOUNT_SID")

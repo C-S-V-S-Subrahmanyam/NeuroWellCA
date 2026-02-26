@@ -1,21 +1,28 @@
 """
-Admin routes for database management and viewing
+Admin Management Routes
+User management, role assignments, and direct permission management
+Database stats and monitoring
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, text
-from pydantic import BaseModel
+from sqlalchemy import select, func, text, or_
+from sqlalchemy.orm import selectinload
+from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
 
 from src.models.database import get_db
-from src.models.models import User, Assessment, Conversation, CrisisLog, ChatSession
-from src.api.routes.auth import get_current_user
+from src.models.models import (
+    User, Assessment, Conversation, CrisisLog, ChatSession,
+    Role, Permission, PermissionSet, UserRole, UserPermission, UserPermissionSet
+)
+from src.api.dependencies import require_permission, get_current_user
+from src.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 # Pydantic models
@@ -283,3 +290,270 @@ async def get_table_info(
     except Exception as e:
         logger.error(f"❌ Failed to get table info: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve table information")
+
+
+# ========== NEW RBAC USER MANAGEMENT ENDPOINTS ==========
+
+class UserListResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: Optional[str]
+    is_active: bool
+    created_at: datetime
+    last_login: Optional[datetime]
+    roles: List[str]
+
+
+class UserUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    age: Optional[int] = None
+    guardian_contact: Optional[str] = None
+    is_active: Optional[bool] = None
+    email_verified: Optional[bool] = None
+
+
+class RoleAssignment(BaseModel):
+    role_id: int
+
+
+class RoleListResponse(BaseModel):
+    id: int
+    code: str
+    name: str
+    description: Optional[str]
+    is_system: bool
+    assigned_at: Optional[datetime] = None
+
+
+class PermissionResponse(BaseModel):
+    id: int
+    code: str
+    name: str
+    category: str
+
+
+class EffectivePermissionsResponse(BaseModel):
+    user_id: int
+    username: str
+    permissions: List[str]
+    permission_count: int
+    roles: List[str]
+    direct_permissions: List[str]
+    direct_permission_sets: List[str]
+
+
+@router.get("/rbac/users", response_model=dict, dependencies=[Depends(require_permission("user.view"))])
+async def list_rbac_users(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """List all users with RBAC info"""
+    query = select(User).where(User.deleted_at == None)
+    
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.where(
+            or_(
+                User.username.ilike(search_pattern),
+                User.email.ilike(search_pattern),
+                User.full_name.ilike(search_pattern)
+            )
+        )
+    
+    if is_active is not None:
+        query = query.where(User.is_active == is_active)
+    
+    count_query = select(func.count()).select_from(query.subquery())
+    result = await db.execute(count_query)
+    total = result.scalar()
+    
+    query = query.options(selectinload(User.user_roles).selectinload(UserRole.role))
+    query = query.offset(offset).limit(limit).order_by(User.created_at.desc())
+    
+    result = await db.execute(query)
+    users = result.scalars().all()
+    
+    users_data = []
+    for user in users:
+        roles = [ur.role.name for ur in user.user_roles if ur.role.is_active and not ur.role.deleted_at]
+        users_data.append({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "is_active": user.is_active,
+            "created_at": user.created_at,
+            "last_login": user.last_login,
+            "roles": roles
+        })
+    
+    return {
+        "users": users_data,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": offset + limit < total
+    }
+
+
+@router.put("/rbac/users/{user_id}", dependencies=[Depends(require_permission("user.edit"))])
+async def update_rbac_user(
+    user_id: int,
+    user_update: UserUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update user information"""
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.deleted_at == None)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_data = user_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    
+    user.updated_at = datetime.now()
+    await db.commit()
+    await db.refresh(user)
+    
+    return {"message": "User updated successfully", "user_id": user_id}
+
+
+@router.delete("/rbac/users/{user_id}", dependencies=[Depends(require_permission("user.delete"))])
+async def delete_rbac_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Soft delete a user"""
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.deleted_at == None)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.deleted_at = datetime.now()
+    user.is_active = False
+    await db.commit()
+    
+    return {"message": "User deleted successfully"}
+
+
+@router.get("/rbac/users/{user_id}/roles", response_model=List[RoleListResponse], dependencies=[Depends(require_permission("user.view"))])
+async def get_user_roles_rbac(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all roles assigned to a user"""
+    roles = await PermissionService.get_user_roles(db, user_id)
+    return roles
+
+
+@router.post("/rbac/users/{user_id}/roles", dependencies=[Depends(require_permission("user.manage_roles"))])
+async def assign_role_rbac(
+    user_id: int,
+    role_assignment: RoleAssignment,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Assign a role to a user"""
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.deleted_at == None)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.execute(
+        select(Role).where(Role.id == role_assignment.role_id, Role.deleted_at == None)
+    )
+    role = result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    success = await PermissionService.assign_role_to_user(
+        db, user_id, role_assignment.role_id, current_user.id
+    )
+    
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to assign role")
+    
+    return {"message": f"Role '{role.name}' assigned successfully"}
+
+
+@router.delete("/rbac/users/{user_id}/roles/{role_id}", dependencies=[Depends(require_permission("user.manage_roles"))])
+async def remove_role_rbac(
+    user_id: int,
+    role_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Remove a role from a user"""
+    success = await PermissionService.remove_role_from_user(
+        db, user_id, role_id, current_user.id
+    )
+    
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to remove role")
+    
+    return {"message": "Role removed successfully"}
+
+
+@router.get("/rbac/users/{user_id}/permissions/effective", response_model=EffectivePermissionsResponse, dependencies=[Depends(require_permission("user.view"))])
+async def get_effective_permissions_rbac(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all effective permissions for a user"""
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.deleted_at == None)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    permissions = await PermissionService.get_user_permissions(db, user_id)
+    roles = await PermissionService.get_user_roles(db, user_id)
+    role_names = [r["name"] for r in roles]
+    
+    result = await db.execute(
+        select(UserPermission)
+        .options(selectinload(UserPermission.permission))
+        .where(UserPermission.user_id == user_id)
+    )
+    direct_perms = result.scalars().all()
+    direct_perm_codes = [up.permission.code for up in direct_perms if up.permission.is_active]
+    
+    result = await db.execute(
+        select(UserPermissionSet)
+        .options(selectinload(UserPermissionSet.permission_set))
+        .where(UserPermissionSet.user_id == user_id)
+    )
+    direct_sets = result.scalars().all()
+    direct_set_codes = [ups.permission_set.code for ups in direct_sets if ups.permission_set.is_active]
+    
+    return {
+        "user_id": user_id,
+        "username": user.username,
+        "permissions": sorted(list(permissions)),
+        "permission_count": len(permissions),
+        "roles": role_names,
+        "direct_permissions": direct_perm_codes,
+        "direct_permission_sets": direct_set_codes
+    }

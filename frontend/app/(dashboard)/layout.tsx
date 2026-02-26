@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '4rem' }}>
             {/* Logo & Brand */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Image src="/logo.png" alt="NeuroWell Logo" width={45} height={45} />
+              <Image src="/logo.PNG" alt="NeuroWell Logo" width={45} height={45} />
               <span style={{ fontSize: '1.5rem', fontWeight: 'bold', background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 NeuroWell
               </span>

@@ -1,0 +1,150 @@
+{
+  "mental_health_resources": {
+    "helplines": [
+      {
+        "name": "AASRA (24x7 Crisis Helpline)",
+        "phone": "9152987821",
+        "email": "aasrahelpline@yahoo.com",
+        "website": "http://www.aasra.info",
+        "description": "Suicide prevention and mental health support",
+        "available": "24/7"
+      },
+      {
+        "name": "Vandrevala Foundation",
+        "phone": "1860-266-2345",
+        "website": "https://www.vandrevalafoundation.com",
+        "description": "Free mental health support and counseling",
+        "available": "24/7"
+      },
+      {
+        "name": "NIMHANS (Bangalore)",
+        "phone": "080-46110007",
+        "website": "https://nimhans.ac.in",
+        "description": "National Institute of Mental Health and Neurosciences",
+        "available": "Working hours"
+      },
+      {
+        "name": "iCall (Mumbai)",
+        "phone": "9152987821",
+        "email": "icall@tiss.edu",
+        "website": "https://icallhelpline.org",
+        "description": "Psychosocial helpline by TISS",
+        "available": "Mon-Sat, 8 AM - 10 PM"
+      }
+    ],
+    "online_therapy": [
+      {
+        "name": "BetterHelp",
+        "website": "https://www.betterhelp.com",
+        "type": "Online counseling platform",
+        "cost": "Subscription-based"
+      },
+      {
+        "name": "Wysa",
+        "website": "https://www.wysa.io",
+        "type": "AI chatbot + human therapist",
+        "cost": "Free with premium options"
+      },
+      {
+        "name": "YourDOST",
+        "website": "https://yourdost.com",
+        "type": "Online counseling for students",
+        "cost": "Free/Paid"
+      }
+    ],
+    "apps": [
+      {
+        "name": "Headspace",
+        "platform": "iOS/Android",
+        "category": "Meditation & mindfulness",
+        "features": ["Guided meditation", "Sleep sounds", "Stress management"]
+      },
+      {
+        "name": "Calm",
+        "platform": "iOS/Android",
+        "category": "Meditation & sleep",
+        "features": ["Sleep stories", "Breathing exercises", "Music"]
+      },
+      {
+        "name": "Moodpath",
+        "platform": "iOS/Android",
+        "category": "Depression screening",
+        "features": ["Daily check-ins", "Progress tracking", "Professional insights"]
+      }
+    ],
+    "educational_resources": [
+      {
+        "title": "Understanding Depression",
+        "url": "https://www.nimh.nih.gov/health/topics/depression",
+        "type": "Article",
+        "duration": "15 min read"
+      },
+      {
+        "title": "Anxiety and Stress Management",
+        "url": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-and-panic-attacks/",
+        "type": "Guide",
+        "duration": "20 min read"
+      },
+      {
+        "title": "Cognitive Behavioral Therapy (CBT) Basics",
+        "url": "https://www.apa.org/ptsd-guideline/patients-and-families/cognitive-behavioral",
+        "type": "Video",
+        "duration": "10 min"
+      }
+    ]
+  },
+  "coping_strategies": {
+    "breathing_exercises": [
+      {
+        "name": "4-7-8 Breathing",
+        "steps": [
+          "Breathe in through nose for 4 seconds",
+          "Hold breath for 7 seconds",
+          "Exhale slowly through mouth for 8 seconds",
+          "Repeat 4 times"
+        ],
+        "benefits": "Reduces anxiety, promotes calm"
+      },
+      {
+        "name": "Box Breathing",
+        "steps": [
+          "Breathe in for 4 counts",
+          "Hold for 4 counts",
+          "Breathe out for 4 counts",
+          "Hold for 4 counts",
+          "Repeat 5 times"
+        ],
+        "benefits": "Stress relief, focus"
+      }
+    ],
+    "grounding_techniques": [
+      {
+        "name": "5-4-3-2-1 Technique",
+        "description": "Name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste",
+        "use_case": "Panic attacks, anxiety"
+      },
+      {
+        "name": "Physical Grounding",
+        "description": "Plant your feet firmly, feel the ground, press your palms together",
+        "use_case": "Dissociation, overwhelm"
+      }
+    ],
+    "quick_stress_relief": [
+      {
+        "activity": "Progressive Muscle Relaxation",
+        "duration": "10 minutes",
+        "steps": "Tense and release each muscle group from toes to head"
+      },
+      {
+        "activity": "Mindful Walking",
+        "duration": "15 minutes",
+        "steps": "Focus on each step, your breath, and surroundings"
+      },
+      {
+        "activity": "Journaling",
+        "duration": "5-10 minutes",
+        "steps": "Write freely about your feelings without judgment"
+      }
+    ]
+  }
+}

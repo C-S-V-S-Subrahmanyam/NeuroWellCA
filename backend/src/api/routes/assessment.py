@@ -11,6 +11,7 @@ import logging
 from src.models.database import get_db
 from src.models.models import User, Assessment, RiskLevel
 from src.api.routes.auth import get_current_user
+from src.api.dependencies import require_permission, require_any_permission
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ def calculate_risk_level(phq9_score: int, gad7_score: int, stress_level: int) ->
         return RiskLevel.LOW
 
 
-@router.post("/submit", response_model=AssessmentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/submit", response_model=AssessmentResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("assessment.create"))])
 async def submit_assessment(
     assessment_data: AssessmentSubmit,
     current_user: User = Depends(get_current_user),
@@ -136,7 +137,7 @@ async def submit_assessment(
         )
 
 
-@router.get("/history", response_model=List[AssessmentResponse])
+@router.get("/history", response_model=List[AssessmentResponse], dependencies=[Depends(require_permission("assessment.view_own"))])
 async def get_assessment_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)

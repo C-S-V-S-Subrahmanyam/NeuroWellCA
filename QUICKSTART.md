@@ -1,169 +1,190 @@
-# NeurowellCA - Quick Start Guide
+# 🚀 Quick Start - NeurowellCA (Updated Feb 25, 2026)
 
-## 🚀 Start the Application (3 Steps)
+## ✅ COMPLETED - UI/UX Redesign (100%)
 
-### Step 1: Start Docker Services
-```bash
+### What's New
+- ✅ **Blue Gradient Theme**: Entire app updated from purple to blue/cyan
+- ✅ **Logo Updated**: Using `logo.PNG` (removed logo.svg)
+- ✅ **Step-by-Step Assessment Wizard**: New one-question-per-page flow
+- ✅ **Login/Register Pages**: Beautiful glass-morphism design
+- ✅ **Home Page**: Modern hero section
+- ✅ **All TypeScript Errors**: Fixed (0 errors)
+
+---
+
+## 🎯 Current Status
+
+### ✅ Working Now:
+- **Frontend**: http://localhost:3000 (LIVE!)
+- All UI pages accessible
+
+### ⚠️ Docker Network Issue:
+Docker is stuck creating `neurowellca_neurowellca-network` (Windows Docker Desktop issue)
+
+---
+
+## 💡 Quick Fix - Option 1 (Recommended)
+
+### Restart Docker Desktop:
+1. Right-click Docker icon in system tray  
+2. Select "Quit Docker Desktop"
+3. Wait 10 seconds
+4. Start Docker Desktop again
+5. Wait for green icon (Docker running)
+
+### Then run:
+```powershell
 cd "C:\Users\DELL\OneDrive\Desktop\4-2 Project\NeurowellCA"
-docker-compose up -d postgres ollama qdrant
+docker-compose down -v
+docker-compose up -d
 ```
 
-Wait 10 seconds for services to be healthy.
+---
 
-### Step 2: Ensure Ollama Model is Ready
-```bash
-docker exec -it neurowellca-ollama ollama pull llama3.2:3b
-```
+## 💡 Quick Fix - Option 2 (Fastest for Testing)
 
-### Step 3: Start Backend
-```bash
-cd backend
+### Start services individually:
+```powershell
+# Terminal 1 - Database
+docker rm -f neurowellca-db 2>$null
+docker run -d -p 5432:5432 `
+  -e POSTGRES_PASSWORD=neurowell123 `
+  -e POSTGRES_USER=neurowell `
+  -e POSTGRES_DB=neurowellca `
+  --name neurowellca-db postgres:15
+
+# Terminal 2 - Qdrant
+docker rm -f neurowellca-qdrant 2>$null
+docker run -d -p 6333:6333 `
+  --name neurowellca-qdrant `
+  qdrant/qdrant:v1.15.5
+
+# Terminal 3 - Ollama
+docker rm -f neurowellca-ollama 2>$null
+docker run -d -p 11434:11434 `
+  --name neurowellca-ollama `
+  ollama/ollama
+
+# Pull model (first time only)
+docker exec neurowellca-ollama ollama pull llama3.2:3b
+
+# Terminal 4 - Backend
+cd "C:\Users\DELL\OneDrive\Desktop\4-2 Project\NeurowellCA\backend"
 python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Wait for: `✅ Application started successfully`
+Frontend is already running on port 3000!
 
 ---
 
-## 🔗 Access Points
+## 🎨 Test the New UI (Works Right Now!)
 
-- **API Documentation**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-- **Qdrant Dashboard**: http://localhost:6333/dashboard
+### 1. Home Page
+```
+http://localhost:3000
+```
+**See**: Blue gradients, logo, hero section, features
+
+### 2. Registration
+```
+http://localhost:3000/register
+```
+**See**: Glass-morphism card, blue theme, multi-field form
+
+### 3. Login
+```
+http://localhost:3000/login
+```
+**See**: Blue gradient, clean design
+
+### 4. Assessment Wizard (NEW!)
+```
+http://localhost:3000/assessment-wizard
+```
+**See**: Progress bar, 6 questions, one per page, skip option
 
 ---
 
-## 🧪 Quick Test
+## 📊 Feature Status
 
-### 1. Register a User
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Blue Theme | ✅ DONE | All pages updated |
+| Logo (PNG) | ✅ DONE | Old .svg removed |
+| Assessment Wizard | ✅ DONE | 6 questions, progress bar |
+| Login/Register UI | ✅ DONE | Glass effects, animations |
+| Home Page | ✅ DONE | Hero, features, stats |
+| Backend API | ⏳ PENDING | Needs DB services |
+| Authentication | ⏳ PENDING | Needs backend |
+| AI Chat | ⏳ PENDING | Needs Ollama |
+
+---
+
+## 🐛 Troubleshooting
+
+### Port 3000 in use:
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/auth/register" -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"username":"demo","email":"demo@test.com","password":"demo123","full_name":"Demo User","age":25}'
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess -Force
 ```
 
-### 2. Login
+### Next.js lock file:
 ```powershell
-$response = Invoke-RestMethod -Uri "http://localhost:8000/api/auth/login" -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"username":"demo","password":"demo123"}'
-$token = $response.access_token
-Write-Host "Token: $token"
+Remove-Item "frontend\.next\dev\lock" -Force
+cd frontend; npm run dev
 ```
 
-### 3. Send Chat Message
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/chat/message" -Method POST -Headers @{"Content-Type"="application/json"; "Authorization"="Bearer $token"} -Body '{"message":"Hello, I need someone to talk to"}'
-```
-
-### 4. Get Chat History
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/chat/sessions" -Method GET -Headers @{"Authorization"="Bearer $token"}
-```
+### Backend can't connect:
+**Error**: `Connect call failed ('127.0.0.1', 5432)`  
+**Fix**: Start PostgreSQL first (see Option 2 above)
 
 ---
 
-## 📊 View Database
+## 📝 Files Changed
 
-### Get Statistics
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/admin/stats" -Method GET -Headers @{"Authorization"="Bearer $token"}
-```
+### Created:
+- `frontend/app/assessment-wizard/page.tsx`
+- `IMPLEMENTATION_COMPLETE.md`
+- `FEATURE_COMPARISON.md`
 
-### Get Users
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/admin/users?limit=10" -Method GET -Headers @{"Authorization"="Bearer $token"}
-```
+### Modified:
+- `frontend/app/(auth)/register/page.tsx` - Blue theme
+- `frontend/app/(auth)/login/page.tsx` - Blue theme
+- `frontend/app/page.tsx` - Blue theme, logo
+- `frontend/app/globals.css` - Blue gradients
+- `config.toml` - CORS port 3001
 
-### Get Conversations
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/admin/conversations?limit=20" -Method GET -Headers @{"Authorization"="Bearer $token"}
-```
-
----
-
-## 🛑 Stop Services
-
-### Stop Backend
-Press `Ctrl+C` in the backend terminal
-
-### Stop Docker
-```bash
-cd "C:\Users\DELL\OneDrive\Desktop\4-2 Project\NeurowellCA"
-docker-compose down
-```
+### Deleted:
+- `frontend/public/logo.svg`
 
 ---
 
-## 🔧 Maintenance Commands
+## ✅ What Works Right Now
 
-### Reset Database (Caution!)
-```bash
-docker exec -it neurowellca-postgres psql -U neurowellca_user -d neurowellca_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-```
+**Visit http://localhost:3000 to see:**
+- ✨ Beautiful new blue gradient design
+- ✨ NeurowellCA logo (PNG)
+- ✨ Modern home page
+- ✨ Registration/login forms (UI only)
+- ✨ Step-by-step assessment wizard
+- ✨ Smooth animations
 
-### View Ollama Models
-```bash
-docker exec -it neurowellca-ollama ollama list
-```
-
-### Check Docker Status
-```bash
-docker-compose ps
-```
-
-### View Backend Logs
-Backend logs appear in the terminal where you run uvicorn.
+**Once backend starts, you'll have:**
+- Full authentication
+- AI chat system
+- Assessment submissions
+- Dashboard analytics
+- Profile management
+- Crisis detection
 
 ---
 
-## ⚡ One-Command Startup Script
+## 🎉 Summary
 
-Save this as `start.bat`:
-```batch
-@echo off
-echo Starting NeurowellCA...
-cd /d "%~dp0"
+**Phase 1 (UI/UX): ✅ COMPLETE**  
+**Phase 2 (Backend): ⏳ Docker network issue - use Option 1 or 2 above**
 
-echo [1/3] Starting Docker services...
-docker-compose up -d postgres ollama qdrant
-
-echo [2/3] Waiting for services...
-timeout /t 10 /nobreak
-
-echo [3/3] Starting backend...
-cd backend
-python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Run: `start.bat`
+**Frontend is LIVE at http://localhost:3000!** 🚀
 
 ---
 
-## 📝 Important Notes
-
-1. **Port 8000** must be free
-2. **Docker Desktop** must be running
-3. **Python 3.11+** required
-4. First startup takes ~30 seconds (loading models)
-5. Ollama model (llama3.2:3b) is ~2GB
-
----
-
-## 🆘 Quick Fixes
-
-### "Port 8000 already in use"
-```powershell
-Get-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess | Stop-Process -Force
-```
-
-### "Docker not running"
-Start Docker Desktop manually
-
-### "Module not found"
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
----
-
-## 📞 Support
-
-Check [README.md](README.md) for full documentation and troubleshooting.
+**Last Updated**: February 25, 2026

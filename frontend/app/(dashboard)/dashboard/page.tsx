@@ -94,72 +94,87 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '48px', height: '48px', border: '4px solid #e5e7eb', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
-          <p style={{ marginTop: '1rem', color: '#6b7280' }}>Loading dashboard...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Mental Health Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-10 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent mb-2">Mental Health Dashboard</h1>
+          <p className="text-gray-600">Track your mental well-being journey</p>
+        </div>
 
         {stats ? (
           <>
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">Total Assessments</p>
-                  <p className="text-4xl font-bold text-blue-600">{stats.totalAssessments}</p>
+                  <div className="inline-block p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl mb-3">
+                    <span className="text-2xl">📊</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 mb-2">Total Assessments</p>
+                  <p className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{stats.totalAssessments}</p>
                 </div>
-              </Card>
+              </div>
 
-              <Card>
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">Latest PHQ-9 Score</p>
-                  <p className={`text-4xl font-bold ${getSeverityColor(stats.latestPhq9, 'phq9')}`}>
-                    {stats.latestPhq9}/27
+                  <div className="inline-block p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl mb-3">
+                    <span className="text-2xl">😔</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 mb-2">Latest PHQ-9 Score</p>
+                  <p className={`text-5xl font-bold ${getSeverityColor(stats.latestPhq9, 'phq9')}`}>
+                    {stats.latestPhq9}<span className="text-2xl text-gray-400">/27</span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm font-semibold text-gray-600 mt-2">
                     {getSeverityLabel(stats.latestPhq9, 'phq9')}
                   </p>
                 </div>
-              </Card>
+              </div>
 
-              <Card>
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">Latest GAD-7 Score</p>
-                  <p className={`text-4xl font-bold ${getSeverityColor(stats.latestGad7, 'gad7')}`}>
-                    {stats.latestGad7}/21
+                  <div className="inline-block p-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl mb-3">
+                    <span className="text-2xl">😰</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 mb-2">Latest GAD-7 Score</p>
+                  <p className={`text-5xl font-bold ${getSeverityColor(stats.latestGad7, 'gad7')}`}>
+                    {stats.latestGad7}<span className="text-2xl text-gray-400">/21</span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm font-semibold text-gray-600 mt-2">
                     {getSeverityLabel(stats.latestGad7, 'gad7')}
                   </p>
                 </div>
-              </Card>
+              </div>
 
-              <Card>
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">Overall Risk Level</p>
-                  <div className={`inline-flex items-center justify-center w-full mt-2`}>
-                    <span className={`px-4 py-2 rounded-lg text-lg font-bold ${stats.riskBg} ${stats.riskColor}`}>
+                  <div className="inline-block p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mb-3">
+                    <span className="text-2xl">🛡️</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 mb-2">Overall Risk Level</p>
+                  <div className="mt-3">
+                    <span className={`px-5 py-2 rounded-xl text-lg font-bold shadow-md ${stats.riskBg} ${stats.riskColor}`}>
                       {stats.riskLevel}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Stress: {stats.latestStress}/10
+                  <p className="text-sm text-gray-600 mt-3">
+                    Stress: <span className="font-bold text-gray-900">{stats.latestStress}/10</span>
                   </p>
                 </div>
-              </Card>
+              </div>
             </div>
 
             {/* Assessment History */}
-            <Card title="Assessment History">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-8 border border-blue-100"><h2 className="text-2xl font-bold text-gray-900 mb-6">Assessment History</h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -209,49 +224,55 @@ export default function DashboardPage() {
                   </tbody>
                 </table>
               </div>
-            </Card>
+            </div>
 
             {/* Quick Actions */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Start New Assessment</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Take a new mental health assessment to track your progress.
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-2xl p-8 text-white">
+                <div className="text-5xl mb-4">📝</div>
+                <h3 className="text-2xl font-bold mb-3">Start New Assessment</h3>
+                <p className="text-blue-100 mb-6">
+                  Track your mental well-being with a comprehensive assessment.
                 </p>
                 <button
-                  onClick={() => router.push('/assessment')}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  onClick={() => router.push('/assessment-wizard')}
+                  className="w-full px-6 py-4 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
                 >
-                  Take Assessment
+                  Take Assessment →
                 </button>
-              </Card>
+              </div>
 
-              <Card>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Continue Chatting</h3>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-2xl p-8 text-white">
+                <div className="text-5xl mb-4">💬</div>
+                <h3 className="text-2xl font-bold mb-3">Continue Chatting</h3>
+                <p className="text-purple-100 mb-6">
                   Talk to our AI counselor about your thoughts and feelings.
                 </p>
                 <button
                   onClick={() => router.push('/chat')}
-                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  className="w-full px-6 py-4 bg-white text-purple-600 rounded-xl font-bold hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl"
                 >
-                  Open Chat
+                  Open Chat →
                 </button>
-              </Card>
+              </div>
             </div>
           </>
         ) : (
-          <Card>
-            <div className="text-center py-12">
-              <p className="text-gray-600 mb-4">No assessment data available yet.</p>
-              <button
-                onClick={() => router.push('/assessment')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Take Your First Assessment
-              </button>
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-12 border border-blue-100 text-center">
+            <div className="inline-block p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl shadow-xl mb-6">
+              <span className="text-7xl">📊</span>
             </div>
-          </Card>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">No Assessment Data Yet</h2>
+            <p className="text-gray-600 mb-8 text-lg">
+              Take your first assessment to start tracking your mental well-being journey.
+            </p>
+            <button
+              onClick={() => router.push('/assessment-wizard')}
+              className="px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-xl hover:shadow-2xl text-lg"
+            >
+              Take Your First Assessment →
+            </button>
+          </div>
         )}
       </div>
     </div>

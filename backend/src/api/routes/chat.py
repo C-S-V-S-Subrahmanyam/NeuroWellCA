@@ -2,18 +2,22 @@
 Chat routes with Ollama AI and Qdrant vector storage
 """
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, AsyncIterator
 from datetime import datetime
 import httpx
 import uuid
 import logging
+import json
+import asyncio
 
 from src.models.database import get_db
 from src.models.models import User, Conversation, ChatSession
 from src.api.routes.auth import get_current_user
+from src.api.dependencies import require_permission, require_any_permission
 from src.services.qdrant_service import qdrant_service
 from src.services.crisis_service import crisis_service
 from src.ml_models.lstm_summarizer import chat_title_generator
@@ -89,7 +93,190 @@ async def call_ollama_api(prompt: str, context: List[str] = None) -> str:
         return "I'm here to support you, but I'm having trouble responding right now. Please try again."
 
 
-@router.post("/message", response_model=ChatResponse)
+async def call_ollama_api_stream(prompt: str, context: List[str] = None) -> AsyncIterator[str]:
+    """Call Ollama API for streaming AI response"""
+    try:
+        # Build context if available
+        full_prompt = prompt
+        if context:
+            context_str = "\n".join(context[-10:])
+            full_prompt = f"Previous conversation:\n{context_str}\n\nUser: {prompt}\n\nAssistant:"
+        
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            async with client.stream(
+                "POST",
+                f"{settings.OLLAMA_API_URL}/api/generate",
+                json={
+                    "model": settings.OLLAMA_MODEL,
+                    "prompt": full_prompt,
+                    "stream": True,
+                    "options": {
+                        "temperature": 0.7,
+                        "top_p": 0.9,
+                    }
+                },
+                timeout=120.0
+            ) as response:
+                if response.status_code != 200:
+                    logger.error(f"Ollama streaming error: {response.status_code}")
+                    yield "I'm experiencing technical difficulties. Please try again."
+                    return
+                
+                async for line in response.aiter_lines():
+                    if line.strip():
+                        try:
+                            data = json.loads(line)
+                            if "response" in data:
+                                yield data["response"]
+                            if data.get("done", False):
+                                break
+                        except json.JSONDecodeError:
+                            continue
+                            
+    except Exception as e:
+        logger.error(f"❌ Ollama streaming failed: {e}")
+        yield "I'm here to support you, but I'm having trouble responding right now. Please try again."
+
+
+@router.post("/message/stream", dependencies=[Depends(require_permission("chat.create"))])
+async def send_message_stream(
+    message_data: ChatMessage,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Send message and get streaming AI response (SSE)"""
+    
+    async def generate_stream():
+        try:
+            # Generate or use existing session ID
+            session_id = message_data.session_id or str(uuid.uuid4())
+            
+            # Send session_id first
+            yield f"event: session\ndata: {json.dumps({'session_id': session_id})}\n\n"
+            
+            # Check for crisis
+            crisis_result = crisis_service.detect_crisis(message_data.message)
+            crisis_detected = crisis_result.get("is_crisis", False)
+            
+            if crisis_detected:
+                yield f"event: crisis\ndata: {json.dumps({'detected': True})}\n\n"
+            
+            # Get conversation context
+            context_messages = await qdrant_service.get_session_context(session_id, limit=10)
+            context = [f"{msg['sender']}: {msg['message_text']}" for msg in context_messages]
+            
+            # Save user message
+            user_conversation = Conversation(
+                user_id=current_user.id,
+                session_id=session_id,
+                message_text=message_data.message,
+                sender="user",
+                crisis_detected=crisis_detected,
+                sentiment_score=crisis_result.get("score", 0.0)
+            )
+            db.add(user_conversation)
+            await db.flush()
+            
+            # Add to Qdrant
+            vector_id = await qdrant_service.add_conversation(
+                conversation_id=user_conversation.id,
+                user_id=current_user.id,
+                session_id=session_id,
+                message_text=message_data.message,
+                sender="user",
+                metadata={"crisis_detected": crisis_detected}
+            )
+            user_conversation.vector_id = vector_id
+            
+            # Prepare crisis response if needed
+            if crisis_detected:
+                crisis_message = (
+                    "🚨 I'm really concerned about what you're sharing. Your safety is the most important thing, "
+                    "and I want you to know you don't have to face this alone.\n\n"
+                    "Please reach out to a crisis helpline RIGHT NOW:\n"
+                    "📞 KIRAN Mental Health: 1800-599-0019 (24/7, Free)\n"
+                    "📞 Sneha India: 044-24640050 (24/7)\n"
+                    "📞 Vandrevala Foundation: 1860-266-2345 (24/7)\n"
+                    "📞 Emergency: 112\n\n"
+                    "These counselors are trained for moments like this. Please call them now. "
+                    "You matter, and help is available."
+                )
+                yield f"event: chunk\ndata: {json.dumps({'chunk': crisis_message})}\n\n"
+                ai_response = crisis_message
+            else:
+                # Stream AI response from Ollama
+                ai_response = ""
+                async for chunk in call_ollama_api_stream(message_data.message, context):
+                    ai_response += chunk
+                    yield f"event: chunk\ndata: {json.dumps({'chunk': chunk})}\n\n"
+                    await asyncio.sleep(0.01)  # Small delay for smooth streaming
+            
+            # Save AI response
+            ai_conversation = Conversation(
+                user_id=current_user.id,
+                session_id=session_id,
+                message_text=ai_response,
+                sender="ai",
+                crisis_detected=False
+            )
+            db.add(ai_conversation)
+            await db.flush()
+            
+            # Add AI response to Qdrant
+            ai_vector_id = await qdrant_service.add_conversation(
+                conversation_id=ai_conversation.id,
+                user_id=current_user.id,
+                session_id=session_id,
+                message_text=ai_response,
+                sender="ai"
+            )
+            ai_conversation.vector_id = ai_vector_id
+            
+            # Update or create chat session
+            result = await db.execute(
+                select(ChatSession).where(ChatSession.session_id == session_id)
+            )
+            chat_session = result.scalar_one_or_none()
+            
+            if not chat_session:
+                # Generate title for new session
+                title = chat_title_generator.generate_title([message_data.message])
+                chat_session = ChatSession(
+                    user_id=current_user.id,
+                    session_id=session_id,
+                    title=title,
+                    message_count=2,
+                    last_message_at=datetime.utcnow()
+                )
+                db.add(chat_session)
+            else:
+                chat_session.message_count += 2
+                chat_session.last_message_at = datetime.utcnow()
+            
+            await db.commit()
+            
+            # Send completion event
+            yield f"event: done\ndata: {json.dumps({'message': 'Stream complete'})}\n\n"
+            
+            logger.info(f"✅ Streaming message processed for user {current_user.username}, session {session_id}")
+            
+        except Exception as e:
+            await db.rollback()
+            logger.error(f"❌ Streaming failed: {e}")
+            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+@router.post("/message", response_model=ChatResponse, dependencies=[Depends(require_permission("chat.create"))])
 async def send_message(
     message_data: ChatMessage,
     current_user: User = Depends(get_current_user),
@@ -221,32 +408,53 @@ async def send_message(
         )
 
 
-@router.get("/history/{session_id}", response_model=List[SessionMessage])
+@router.get("/history/{session_id}", dependencies=[Depends(require_permission("chat.view"))])
 async def get_chat_history(
     session_id: str,
+    limit: int = 50,
+    offset: int = 0,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get chat history for a session"""
+    """Get paginated chat history for a session"""
     try:
+        # Get total count
+        count_result = await db.execute(
+            select(Conversation)
+            .where(Conversation.session_id == session_id)
+            .where(Conversation.user_id == current_user.id)
+        )
+        total = len(count_result.scalars().all())
+        
+        # Get paginated messages
         result = await db.execute(
             select(Conversation)
             .where(Conversation.session_id == session_id)
             .where(Conversation.user_id == current_user.id)
             .order_by(Conversation.created_at.asc())
+            .limit(limit)
+            .offset(offset)
         )
         conversations = result.scalars().all()
         
-        return [
-            SessionMessage(
-                id=conv.id,
-                message_text=conv.message_text,
-                sender=conv.sender,
-                created_at=conv.created_at,
-                crisis_detected=conv.crisis_detected or False
-            )
+        messages = [
+            {
+                "id": conv.id,
+                "message_text": conv.message_text,
+                "sender": conv.sender,
+                "created_at": conv.created_at.isoformat(),
+                "crisis_detected": conv.crisis_detected or False
+            }
             for conv in conversations
         ]
+        
+        return {
+            "messages": messages,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "has_more": (offset + len(messages)) < total
+        }
         
     except Exception as e:
         logger.error(f"❌ Failed to get chat history: {e}")
@@ -256,7 +464,7 @@ async def get_chat_history(
         )
 
 
-@router.get("/sessions", response_model=List[ChatSessionInfo])
+@router.get("/sessions", response_model=List[ChatSessionInfo], dependencies=[Depends(require_permission("chat.view"))])
 async def get_chat_sessions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -306,7 +514,7 @@ async def get_chat_sessions(
         )
 
 
-@router.delete("/session/{session_id}")
+@router.delete("/session/{session_id}", dependencies=[Depends(require_permission("chat.delete"))])
 async def delete_chat_session(
     session_id: str,
     current_user: User = Depends(get_current_user),
@@ -349,3 +557,50 @@ async def delete_chat_session(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete session"
         )
+
+
+class RenameSessionRequest(BaseModel):
+    title: str
+
+
+@router.patch("/session/{session_id}/rename", dependencies=[Depends(require_permission("chat.view"))])
+async def rename_chat_session(
+    session_id: str,
+    request: RenameSessionRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Rename a chat session"""
+    try:
+        # Find session
+        result = await db.execute(
+            select(ChatSession)
+            .where(ChatSession.session_id == session_id)
+            .where(ChatSession.user_id == current_user.id)
+        )
+        session = result.scalar_one_or_none()
+        
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found"
+            )
+        
+        # Update title
+        session.title = request.title[:200]  # Limit to 200 chars
+        await db.commit()
+        
+        logger.info(f"✅ Renamed session {session_id} to '{request.title}'")
+        
+        return {"message": "Session renamed successfully", "title": session.title}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"❌ Failed to rename session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to rename session"
+        )
+

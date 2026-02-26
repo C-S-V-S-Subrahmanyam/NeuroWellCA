@@ -5,12 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { authService } from '@/lib/auth';
-import OTPVerify from './otp-verify';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [showOTPVerify, setShowOTPVerify] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -44,34 +41,50 @@ export default function RegisterPage() {
         guardian_contact: formData.guardian_contact || undefined,
       });
 
-      // Show OTP verification screen
-      setRegisteredEmail(formData.email);
-      setShowOTPVerify(true);
+      // Auto-login after successful registration
+      await authService.login(formData.username, formData.password);
+      await authService.getCurrentUser();
+      
+      // Redirect to step-by-step assessment wizard (mandatory for new users)
+      router.push('/assessment-wizard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      // Log the actual error for debugging
+      console.error('Registration error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      
+      // Handle validation errors (array of objects) or string errors
+      const errorData = err.response?.data;
+      if (errorData?.detail) {
+        if (Array.isArray(errorData.detail)) {
+          // FastAPI validation errors
+          const errorMessages = errorData.detail.map((e: any) => 
+            `${e.loc?.join(' > ') || 'Field'}: ${e.msg}`
+          ).join(', ');
+          setError(errorMessages);
+        } else {
+          setError(errorData.detail);
+        }
+      } else if (err.message) {
+        // Network error or other issues
+        setError(`Error: ${err.message}. Please check if backend is running.`);
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (showOTPVerify) {
-    return <OTPVerify 
-      email={registeredEmail} 
-      username={formData.username}
-      password={formData.password}
-      onBack={() => setShowOTPVerify(false)} 
-    />;
-  }
-
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%)', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%)', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: '28rem' }}>
         {/* Logo & Title */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-            <Image src="/logo.png" alt="NeuroWell Logo" width={70} height={70} />
+            <Image src="/logo.PNG" alt="NeuroWell Logo" width={70} height={70} priority />
           </div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', background: 'linear-gradient(135deg, #1e40af, #3b82f6, #60a5fa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '0.5rem' }}>
             Create Account
           </h1>
           <p style={{ color: '#6b7280' }}>Join NeuroWell for your wellness journey</p>
@@ -98,7 +111,7 @@ export default function RegisterPage() {
                 required
                 placeholder="Choose a username"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#8b5cf6'}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
             </div>
@@ -115,7 +128,7 @@ export default function RegisterPage() {
                 required
                 placeholder="your@email.com"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#8b5cf6'}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
             </div>
@@ -132,7 +145,7 @@ export default function RegisterPage() {
                 required
                 placeholder="Create a strong password"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#8b5cf6'}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
             </div>
@@ -149,7 +162,7 @@ export default function RegisterPage() {
                 required
                 placeholder="Confirm your password"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#8b5cf6'}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
             </div>
@@ -165,7 +178,7 @@ export default function RegisterPage() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, full_name: e.target.value })}
                 placeholder="Your full name"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#8b5cf6'}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
             </div>
@@ -181,7 +194,7 @@ export default function RegisterPage() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, age: e.target.value })}
                 placeholder="Your age"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#8b5cf6'}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
             </div>
@@ -197,7 +210,7 @@ export default function RegisterPage() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, guardian_contact: e.target.value })}
                 placeholder="Emergency contact number"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#8b5cf6'}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
               />
             </div>
@@ -215,7 +228,7 @@ export default function RegisterPage() {
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: '#6b7280' }}>
             Already have an account?{' '}
-            <Link href="/login" style={{ color: '#4f46e5', fontWeight: '500', textDecoration: 'none' }}>
+            <Link href="/login" style={{ color: '#3b82f6', fontWeight: '500', textDecoration: 'none' }}>
               Sign In
             </Link>
           </div>

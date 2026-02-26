@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 import logging
 from contextlib import asynccontextmanager
 
-from src.api.routes import auth, chat, assessment, dashboard, admin, profile
+from src.api.routes import auth, chat, assessment, dashboard, admin, profile, permissions, feedback, llm_providers, settings_routes
 from src.models.database import engine, Base
 from src.services.qdrant_service import qdrant_service
 from src.utils.config import settings
@@ -77,7 +77,11 @@ app.include_router(profile.router, prefix="/api/auth", tags=["Profile"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(assessment.router, prefix="/api/assessments", tags=["Assessments"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
-app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(admin.router, prefix="/api", tags=["Admin"])
+app.include_router(permissions.router, prefix="/api", tags=["RBAC"])
+app.include_router(feedback.router, prefix="/api", tags=["Feedback"])
+app.include_router(llm_providers.router, prefix="/api", tags=["LLM Providers"])
+app.include_router(settings_routes.router, prefix="/api", tags=["Settings"])
 
 
 # Root endpoint

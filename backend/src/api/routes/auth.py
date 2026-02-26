@@ -11,14 +11,11 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 import logging
-import secrets
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 from src.models.database import get_db
-from src.models.models import User
+from src.models.models import User, Role
 from src.utils.config import settings
+from src.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -50,17 +47,11 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
-class OTPVerification(BaseModel):
-    email: str
-    otp: str
-
-
 class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
     requires_assessment: bool = False
-    requires_email_verification: bool = False
 
 
 class UserResponse(BaseModel):
@@ -76,10 +67,6 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-# In-memory OTP storage (use Redis in production)
-otp_storage = {}
-
-
 # Helper functions
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify password against hash"""
@@ -89,116 +76,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     """Hash password"""
     return pwd_context.hash(password)
-
-
-def generate_otp() -> str:
-    """Generate 6-digit OTP"""
-    return ''.join([str(secrets.randbelow(10)) for _ in range(6)])
-
-
-def send_otp_email(email: str, otp: str) -> bool:
-    """Send OTP via email using Gmail SMTP"""
-    try:
-        # Store OTP with expiration (5 minutes)
-        otp_storage[email] = {
-            'otp': otp,
-            'expires_at': datetime.utcnow() + timedelta(minutes=5)
-        }
-        
-        # Check if SMTP is configured
-        if not settings.SMTP_PASSWORD:
-            logger.warning(f"⚠️ SMTP not configured. OTP for {email}: {otp}")
-            logger.info("To enable email sending:")
-            logger.info("1. Generate Gmail App Password at: https://myaccount.google.com/apppasswords")
-            logger.info("2. Set SMTP_PASSWORD in .env file")
-            return True  # Return True so registration can proceed
-        
-        # Send actual email
-        try:
-            message = MIMEMultipart('alternative')
-            message['From'] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_USER}>"
-            message['To'] = email
-            message['Subject'] = '🧠 NeuroWellCA - Email Verification Code'
-            
-            # HTML email body
-            html_body = f"""
-            <html>
-              <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                  <h2 style="color: #4A90E2;">🧠 NeuroWellCA</h2>
-                  <h3>Email Verification</h3>
-                  <p>Your verification code is:</p>
-                  <div style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
-                    <h1 style="color: #4A90E2; letter-spacing: 5px; margin: 0;">{otp}</h1>
-                  </div>
-                  <p><strong>This code expires in 5 minutes.</strong></p>
-                  <p>If you didn't request this code, please ignore this email.</p>
-                  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-                  <p style="font-size: 12px; color: #666;">NeuroWellCA - AI-Powered Mental Health Support Platform</p>
-                </div>
-              </body>
-            </html>
-            """
-            
-            # Plain text alternative
-            text_body = f"""
-            NeuroWellCA - Email Verification
-            
-            Your verification code is: {otp}
-            
-            This code expires in 5 minutes.
-            
-            If you didn't request this code, please ignore this email.
-            """
-            
-            # Attach both versions
-            part1 = MIMEText(text_body, 'plain')
-            part2 = MIMEText(html_body, 'html')
-            message.attach(part1)
-            message.attach(part2)
-            
-            # Send email
-            with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as server:
-                server.starttls()
-                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                server.send_message(message)
-            
-            logger.info(f"✅ OTP email sent successfully to {email}")
-            return True
-            
-        except smtplib.SMTPAuthenticationError:
-            logger.error("❌ SMTP Authentication failed. Check your Gmail App Password.")
-            logger.error("Generate App Password at: https://myaccount.google.com/apppasswords")
-            logger.warning(f"📧 Fallback - OTP for {email}: {otp}")
-            return True  # Still allow registration
-        except Exception as smtp_error:
-            logger.error(f"❌ SMTP Error: {smtp_error}")
-            logger.warning(f"📧 Fallback - OTP for {email}: {otp}")
-            return True  # Still allow registration
-            
-    except Exception as e:
-        logger.error(f"❌ Failed to send OTP: {e}")
-        return False
-
-
-def verify_otp(email: str, otp: str) -> bool:
-    """Verify OTP for email"""
-    if email not in otp_storage:
-        return False
-    
-    stored_data = otp_storage[email]
-    
-    # Check if OTP expired
-    if datetime.utcnow() > stored_data['expires_at']:
-        del otp_storage[email]
-        return False
-    
-    # Verify OTP
-    if stored_data['otp'] == otp:
-        del otp_storage[email]  # Remove after successful verification
-        return True
-    
-    return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -268,9 +145,9 @@ async def get_current_user(
 
 
 # Routes
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
-    """Register new user and send OTP for verification"""
+    """Register new user (direct registration without OTP)"""
     try:
         # Check if username exists
         result = await db.execute(select(User).where(User.username == user_data.username))
@@ -288,20 +165,43 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
                 detail="Email already exists"
             )
         
-        # Generate and send OTP
-        otp = generate_otp()
-        if not send_otp_email(user_data.email, otp):
-            logger.warning(f"⚠️ OTP sending failed for: {user_data.email}")
+        # Create new user directly
+        new_user = User(
+            username=user_data.username,
+            email=user_data.email,
+            password_hash=get_password_hash(user_data.password),
+            full_name=user_data.full_name,
+            age=user_data.age,
+            guardian_contact=user_data.guardian_contact,
+            has_completed_initial_assessment=False,
+            email_verified=True  # Auto-verified for now
+        )
         
-        logger.info(f"✅ OTP sent to {user_data.email}: {otp}")
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
         
-        # Store user data temporarily (will be created after OTP verification)
-        otp_storage[user_data.email]['user_data'] = user_data.dict()
+        logger.info(f"✅ New user created: {new_user.username}")
         
-        return {
-            "message": "OTP sent to your email. Please verify to complete registration.",
-            "email": user_data.email
-        }
+        # Assign default "patient" role with full permissions
+        try:
+            result = await db.execute(select(Role).where(Role.code == "patient"))
+            patient_role = result.scalar_one_or_none()
+            
+            if patient_role:
+                await PermissionService.assign_role_to_user(
+                    db=db,
+                    user_id=new_user.id,
+                    role_id=patient_role.id
+                )
+                logger.info(f"✅ Assigned 'patient' role to user: {new_user.username}")
+            else:
+                logger.warning(f"⚠️ 'patient' role not found in database")
+        except Exception as perm_error:
+            logger.error(f"❌ Failed to assign default role: {perm_error}")
+            # Don't fail registration if permission assignment fails
+        
+        return new_user
         
     except HTTPException:
         raise
@@ -310,90 +210,6 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed"
-        )
-
-
-@router.post("/verify-otp", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def verify_otp_and_create_user(verification: OTPVerification, db: AsyncSession = Depends(get_db)):
-    """Verify OTP and create user account"""
-    try:
-        if not verify_otp(verification.email, verification.otp):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired OTP"
-            )
-        
-        # Get stored user data
-        if verification.email not in otp_storage or 'user_data' not in otp_storage[verification.email]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Registration session expired. Please register again."
-            )
-        
-        user_data_dict = otp_storage[verification.email]['user_data']
-        del otp_storage[verification.email]  # Clean up
-        
-        # Create new user
-        new_user = User(
-            username=user_data_dict['username'],
-            email=user_data_dict['email'],
-            password_hash=get_password_hash(user_data_dict['password']),
-            full_name=user_data_dict.get('full_name'),
-            age=user_data_dict.get('age'),
-            guardian_contact=user_data_dict.get('guardian_contact'),
-            has_completed_initial_assessment=False,
-            email_verified=True
-        )
-        
-        db.add(new_user)
-        await db.commit()
-        await db.refresh(new_user)
-        
-        logger.info(f"✅ New user created after OTP verification: {new_user.username}")
-        
-        return new_user
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        await db.rollback()
-        logger.error(f"❌ OTP verification failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Verification failed"
-        )
-
-
-@router.post("/resend-otp")
-async def resend_otp(email: EmailStr, db: AsyncSession = Depends(get_db)):
-    """Resend OTP to email"""
-    try:
-        # Check if email has pending registration
-        if email not in otp_storage or 'user_data' not in otp_storage[email]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No pending registration for this email"
-            )
-        
-        # Generate new OTP
-        otp = generate_otp()
-        if not send_otp_email(email, otp):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send OTP"
-            )
-        
-        logger.info(f"✅ OTP resent to {email}: {otp}")
-        
-        return {"message": "OTP sent successfully"}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Resend OTP failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to resend OTP"
         )
 
 
@@ -448,6 +264,43 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+class ProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    age: Optional[int] = None
+    guardian_contact: Optional[str] = None
+
+
+@router.put("/profile")
+async def update_profile(
+    profile_data: ProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update user profile"""
+    try:
+        # Update fields if provided
+        if profile_data.full_name is not None:
+            current_user.full_name = profile_data.full_name
+        if profile_data.age is not None:
+            current_user.age = profile_data.age
+        if profile_data.guardian_contact is not None:
+            current_user.guardian_contact = profile_data.guardian_contact
+        
+        await db.commit()
+        await db.refresh(current_user)
+        
+        logger.info(f"✅ Profile updated for user: {current_user.username}")
+        
+        return {"message": "Profile updated successfully"}
+    except Exception as e:
+        logger.error(f"❌ Profile update failed: {e}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update profile"
+        )
+
+
 @router.post("/refresh", response_model=Token)
 async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     """Refresh access token"""
@@ -483,8 +336,7 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
         return Token(
             access_token=access_token,
             refresh_token=new_refresh_token,
-            requires_assessment=not user.has_completed_initial_assessment,
-            requires_email_verification=not email_verified
+            requires_assessment=not user.has_completed_initial_assessment
         )
         
     except (JWTError, ValueError, TypeError) as e:
@@ -492,90 +344,4 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token"
-        )
-
-
-@router.post("/verify-otp")
-async def verify_email_otp(
-    verification: OTPVerification,
-    db: AsyncSession = Depends(get_db)
-):
-    """Verify email OTP"""
-    try:
-        # Verify OTP
-        if not verify_otp(verification.email, verification.otp):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired OTP"
-            )
-        
-        # Find user and mark email as verified
-        result = await db.execute(select(User).where(User.email == verification.email))
-        user = result.scalar_one_or_none()
-        
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        # Mark email as verified
-        if hasattr(user, 'email_verified'):
-            user.email_verified = True
-            await db.commit()
-        
-        logger.info(f"✅ Email verified for user: {user.username}")
-        
-        return {"message": "Email verified successfully", "email": verification.email}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Email verification failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Email verification failed"
-        )
-
-
-@router.post("/resend-otp")
-async def resend_otp(
-    email: EmailStr,
-    db: AsyncSession = Depends(get_db)
-):
-    """Resend OTP to email"""
-    try:
-        # Check if user exists
-        result = await db.execute(select(User).where(User.email == email))
-        user = result.scalar_one_or_none()
-        
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        # Check if already verified
-        if hasattr(user, 'email_verified') and user.email_verified:
-            return {"message": "Email already verified", "email": email}
-        
-        # Generate and send new OTP
-        otp = generate_otp()
-        if not send_otp_email(email, otp):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send OTP"
-            )
-        
-        logger.info(f"📧 OTP resent to: {email}")
-        
-        return {"message": "OTP sent successfully", "email": email}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ OTP resend failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to resend OTP"
         )

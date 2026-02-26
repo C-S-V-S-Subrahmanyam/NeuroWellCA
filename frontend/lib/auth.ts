@@ -27,23 +27,11 @@ export const authService = {
     full_name?: string;
     age?: number;
     guardian_contact?: string;
-  }): Promise<{ message: string; email: string }> {
+  }): Promise<User> {
+    console.log('📤 Sending registration request:', { ...data, password: '***' });
     const response = await api.post('/api/auth/register', data);
+    console.log('✅ Registration successful:', response.data);
     return response.data;
-  },
-
-  async verifyOTP(email: string, otp: string): Promise<User> {
-    const response = await api.post('/api/auth/verify-otp', { email, otp });
-    const user = response.data;
-    
-    // Auto-login after successful verification
-    // Note: The backend should return tokens or we need to login separately
-    // For now, we'll login after verification
-    return user;
-  },
-
-  async resendOTP(email: string): Promise<void> {
-    await api.post('/api/auth/resend-otp', { email });
   },
 
   async login(username: string, password: string): Promise<LoginResponse> {

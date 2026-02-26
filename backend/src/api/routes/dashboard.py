@@ -12,6 +12,7 @@ import logging
 from src.models.database import get_db
 from src.models.models import User, Assessment, Conversation, CrisisLog
 from src.api.routes.auth import get_current_user
+from src.api.dependencies import require_permission
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ async def get_dashboard_stats(
         raise HTTPException(status_code=500, detail="Failed to retrieve statistics")
 
 
-@router.get("/trends", response_model=List[AssessmentTrend])
+@router.get("/trends", response_model=List[AssessmentTrend], dependencies=[Depends(require_permission("assessment.view_own"))])
 async def get_assessment_trends(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
