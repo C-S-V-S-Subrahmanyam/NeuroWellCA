@@ -40,7 +40,7 @@ async def get_current_user(
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         user_id: int = int(payload.get("sub"))
         jti: Optional[str] = payload.get("jti")  # JWT ID for revocation
-        token_version: Optional[int] = payload.get("token_version", 1)
+        token_version: Optional[int] = payload.get("token_version")
         
         if user_id is None:
             raise credentials_exception
@@ -77,7 +77,8 @@ async def get_current_user(
         )
     
     # Check token version (invalidates all old tokens)
-    if user.token_version != token_version:
+    user_token_version = user.token_version or 1
+    if token_version is not None and user_token_version != token_version:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token is no longer valid. Please log in again.",

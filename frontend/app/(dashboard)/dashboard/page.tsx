@@ -227,7 +227,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-2xl p-8 text-white">
                 <div className="text-5xl mb-4">📝</div>
                 <h3 className="text-2xl font-bold mb-3">Start New Assessment</h3>
@@ -253,6 +253,20 @@ export default function DashboardPage() {
                   className="w-full px-6 py-4 bg-white text-purple-600 rounded-xl font-bold hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl"
                 >
                   Open Chat →
+                </button>
+              </div>
+
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-2xl p-8 text-white">
+                <div className="text-5xl mb-4">🎮</div>
+                <h3 className="text-2xl font-bold mb-3">Play Games & Exercises</h3>
+                <p className="text-emerald-100 mb-6">
+                  Relax with mindful mini-games, breathing, and grounding exercises.
+                </p>
+                <button
+                  onClick={() => router.push('/games')}
+                  className="w-full px-6 py-4 bg-white text-emerald-700 rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg hover:shadow-xl"
+                >
+                  Open Games →
                 </button>
               </div>
             </div>

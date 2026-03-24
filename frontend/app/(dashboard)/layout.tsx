@@ -11,7 +11,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  const activeMenu = pathname?.includes('/chat') ? 'chat' : pathname?.includes('/assessment') ? 'assessment' : 'dashboard';
+  const activeMenu = pathname?.includes('/chat')
+    ? 'chat'
+    : pathname?.includes('/assessment')
+    ? 'assessment'
+    : pathname?.includes('/games')
+    ? 'games'
+    : pathname?.includes('/admin')
+    ? 'admin'
+    : 'dashboard';
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -24,8 +32,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const userData = await authService.getCurrentUser();
         setUser(userData);
         
-        // Redirect to assessment if not completed (except if already on assessment page)
-        if (!userData.has_completed_initial_assessment && !pathname?.includes('/assessment')) {
+        // Redirect to assessment if not completed, but allow admin and games routes.
+        if (
+          !userData.has_completed_initial_assessment &&
+          !pathname?.includes('/assessment') &&
+          !pathname?.includes('/admin') &&
+          !pathname?.includes('/games')
+        ) {
           router.push('/assessment');
         }
       } catch (err) {
@@ -121,6 +134,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 📝 Assessment
               </button>
+              <button
+                onClick={() => router.push('/games')}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  background: activeMenu === 'games' ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent',
+                  color: activeMenu === 'games' ? 'white' : '#4b5563',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = activeMenu === 'games' ? 'linear-gradient(135deg, #4338ca, #6d28d9)' : '#f3f4f6'}
+                onMouseLeave={(e) => e.currentTarget.style.background = activeMenu === 'games' ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent'}
+              >
+                🎮 Games
+              </button>
+              
+              {/* Admin Panel - Only show for admin user */}
+              {user?.username === 'admin' && (
+                <button
+                  onClick={() => router.push('/admin')}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    background: pathname?.includes('/admin') ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 'transparent',
+                    color: pathname?.includes('/admin') ? 'white' : '#dc2626',
+                    border: '2px solid #fecaca',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!pathname?.includes('/admin')) {
+                      e.currentTarget.style.background = '#fef2f2';
+                      e.currentTarget.style.borderColor = '#fca5a5';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!pathname?.includes('/admin')) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = '#fecaca';
+                    }
+                  }}
+                >
+                  👑 Admin
+                </button>
+              )}
             </div>
 
             {/* User Menu */}
@@ -146,11 +209,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   color: '#dc2626',
                   border: '2px solid #fee2e2',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#fecaca'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#fee2e2'; }}
               >
+                <Image src="/assets/logout.svg" alt="Logout" width={18} height={18} />
                 Logout
               </button>
             </div>

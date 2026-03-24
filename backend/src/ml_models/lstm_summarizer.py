@@ -212,7 +212,7 @@ class ChatTitleGenerator:
         if not messages:
             return "New Chat"
         
-        first_message = messages[0][:60].strip()
+        first_message = messages[0][:160].strip()
         
         # Keyword-based titles
         keywords_map = {
@@ -236,7 +236,11 @@ class ChatTitleGenerator:
             'angry': 'Anger Management',
             'family': 'Family Issues',
             'relationship': 'Relationships',
-            'work': 'Work Stress'
+            'work': 'Work Stress',
+            'exam': 'Exam Stress',
+            'study': 'Study Pressure',
+            'motivation': 'Motivation & Focus',
+            'confidence': 'Confidence Building'
         }
         
         message_lower = first_message.lower()
@@ -244,13 +248,17 @@ class ChatTitleGenerator:
             if keyword in message_lower:
                 return title
         
-        # Use first few words if no keyword match
-        words = first_message.split()[:4]
-        if len(words) > 0:
-            title = ' '.join(words)
-            if len(title) > 30:
-                title = title[:27] + '...'
-            return title.capitalize()
+        # Build a concise intent title from cleaned words instead of first-words snippet
+        cleaned = ''.join(ch if ch.isalnum() or ch.isspace() else ' ' for ch in first_message.lower())
+        stop_words = {
+            'i', 'me', 'my', 'am', 'is', 'are', 'was', 'were', 'the', 'a', 'an',
+            'to', 'for', 'and', 'or', 'of', 'in', 'on', 'at', 'it', 'that', 'this',
+            'with', 'about', 'please', 'can', 'could', 'would', 'should', 'help'
+        }
+        terms = [w for w in cleaned.split() if len(w) > 2 and w not in stop_words]
+        if terms:
+            intent = terms[:3]
+            return (' '.join(intent)).title()[:32]
         
         return "New Conversation"
     

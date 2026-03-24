@@ -32,6 +32,11 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Network/CORS/backend-down: keep auth state and surface error to UI.
+    if (!error.response) {
+      return Promise.reject(error);
+    }
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -52,6 +57,10 @@ api.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${access_token}`;
             return api(originalRequest);
           } catch (refreshError) {
+            // Only clear session when refresh actually returns auth failure.
+            if (!(refreshError as any)?.response) {
+              return Promise.reject(error);
+            }
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('user');

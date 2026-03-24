@@ -148,8 +148,9 @@ export default function ProfilePage() {
                 <button
                   onClick={() => setIsEditing(true)}
                   className="btn-primary"
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 >
+                  <Image src="/assets/EditPencilIcon.svg" alt="Edit" width={16} height={16} />
                   Edit Profile
                 </button>
               )}

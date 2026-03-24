@@ -34,8 +34,11 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      console.error('Error response:', err.response);
-      setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      if (!err?.response) {
+        setError('Unable to reach server. Please ensure backend is running on http://localhost:8000.');
+      } else {
+        setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setIsLoading(false);
     }

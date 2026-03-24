@@ -10,6 +10,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from uuid import uuid4
 import logging
 
 from src.models.database import get_db
@@ -140,6 +141,15 @@ async def get_current_user(
     
     if user is None:
         raise credentials_exception
+
+    token_version = payload.get("token_version")
+    user_token_version = user.token_version or 1
+    if token_version is not None and user_token_version != token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token is no longer valid. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     return user
 
@@ -229,12 +239,22 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
             )
         
         # Update last login
+        if user.token_version is None:
+            user.token_version = 1
         user.last_login = datetime.utcnow()
         await db.commit()
         
         # Create tokens
-        access_token = create_access_token(data={"sub": str(user.id)})
-        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+        access_token = create_access_token(data={
+            "sub": str(user.id),
+            "token_version": user.token_version or 1,
+            "jti": str(uuid4()),
+        })
+        refresh_token = create_refresh_token(data={
+            "sub": str(user.id),
+            "token_version": user.token_version or 1,
+            "jti": str(uuid4()),
+        })
         
         logger.info(f"✅ User logged in: {user.username}")
         
@@ -327,8 +347,20 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
             )
         
         # Create new tokens
-        access_token = create_access_token(data={"sub": str(user.id)})
-        new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
+        if user.token_version is None:
+            user.token_version = 1
+            await db.commit()
+
+        access_token = create_access_token(data={
+            "sub": str(user.id),
+            "token_version": user.token_version or 1,
+            "jti": str(uuid4()),
+        })
+        new_refresh_token = create_refresh_token(data={
+            "sub": str(user.id),
+            "token_version": user.token_version or 1,
+            "jti": str(uuid4()),
+        })
         
         # Check if email verification is required
         email_verified = getattr(user, 'email_verified', True)
