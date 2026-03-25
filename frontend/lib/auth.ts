@@ -7,6 +7,7 @@ export interface User {
   full_name?: string;
   age?: number;
   guardian_contact?: string;
+  guardian_email?: string;
   email_verified?: boolean;
   has_completed_initial_assessment: boolean;
   created_at: string;
@@ -27,6 +28,7 @@ export const authService = {
     full_name?: string;
     age?: number;
     guardian_contact?: string;
+    guardian_email?: string;
   }): Promise<User> {
     console.log('📤 Sending registration request:', { ...data, password: '***' });
     const response = await api.post('/api/auth/register', data);

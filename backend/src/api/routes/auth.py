@@ -37,6 +37,7 @@ class UserRegister(BaseModel):
     full_name: Optional[str] = None
     age: Optional[int] = None
     guardian_contact: Optional[str] = None
+    guardian_email: Optional[EmailStr] = None
 
 
 class UserLogin(BaseModel):
@@ -61,6 +62,8 @@ class UserResponse(BaseModel):
     email: str
     full_name: Optional[str]
     age: Optional[int]
+    guardian_contact: Optional[str]
+    guardian_email: Optional[EmailStr]
     has_completed_initial_assessment: bool
     created_at: datetime
     
@@ -183,6 +186,7 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
             full_name=user_data.full_name,
             age=user_data.age,
             guardian_contact=user_data.guardian_contact,
+            guardian_email=user_data.guardian_email,
             has_completed_initial_assessment=False,
             email_verified=True  # Auto-verified for now
         )
@@ -288,6 +292,7 @@ class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     age: Optional[int] = None
     guardian_contact: Optional[str] = None
+    guardian_email: Optional[EmailStr] = None
 
 
 @router.put("/profile")
@@ -305,6 +310,8 @@ async def update_profile(
             current_user.age = profile_data.age
         if profile_data.guardian_contact is not None:
             current_user.guardian_contact = profile_data.guardian_contact
+        if profile_data.guardian_email is not None:
+            current_user.guardian_email = profile_data.guardian_email
         
         await db.commit()
         await db.refresh(current_user)

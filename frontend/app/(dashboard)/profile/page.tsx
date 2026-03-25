@@ -19,6 +19,7 @@ export default function ProfilePage() {
     full_name: '',
     age: '',
     guardian_contact: '',
+    guardian_email: '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -43,6 +44,7 @@ export default function ProfilePage() {
         full_name: userData.full_name || '',
         age: userData.age?.toString() || '',
         guardian_contact: userData.guardian_contact || '',
+        guardian_email: userData.guardian_email || '',
       });
     } catch (err) {
       console.error('Failed to load user:', err);
@@ -63,6 +65,7 @@ export default function ProfilePage() {
         full_name: formData.full_name || null,
         age: formData.age ? parseInt(formData.age) : null,
         guardian_contact: formData.guardian_contact || null,
+        guardian_email: formData.guardian_email || null,
       });
 
       setSuccess('Profile updated successfully!');
@@ -227,6 +230,19 @@ export default function ProfilePage() {
                   />
                 </div>
 
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
+                    Guardian Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.guardian_email}
+                    onChange={(e) => setFormData({ ...formData, guardian_email: e.target.value })}
+                    placeholder="Emergency contact email"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem', outline: 'none' }}
+                  />
+                </div>
+
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                   <button
                     type="submit"
@@ -244,6 +260,7 @@ export default function ProfilePage() {
                         full_name: user?.full_name || '',
                         age: user?.age?.toString() || '',
                         guardian_contact: user?.guardian_contact || '',
+                        guardian_email: user?.guardian_email || '',
                       });
                     }}
                     style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', color: '#374151', fontWeight: '500', cursor: 'pointer' }}
@@ -265,6 +282,10 @@ export default function ProfilePage() {
                 <div>
                   <div style={{ fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.25rem' }}>GUARDIAN CONTACT</div>
                   <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{user?.guardian_contact || 'Not set'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.25rem' }}>GUARDIAN EMAIL</div>
+                  <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{user?.guardian_email || 'Not set'}</div>
                 </div>
               </div>
             )}

@@ -32,8 +32,13 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 
-# Load .env file first (for secrets)
-load_dotenv()
+# Load .env files first (for secrets).
+# Support both project-root .env and backend/.env depending on run directory.
+_THIS_FILE = Path(__file__).resolve()
+_PROJECT_ROOT = _THIS_FILE.parents[3]
+_BACKEND_ROOT = _THIS_FILE.parents[2]
+load_dotenv(_PROJECT_ROOT / ".env")
+load_dotenv(_BACKEND_ROOT / ".env")
 
 
 def load_toml_config(config_path: Optional[str] = None) -> dict:
@@ -120,10 +125,22 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: str = Field(default=_toml_config["whatsapp"]["account_sid"], env="TWILIO_ACCOUNT_SID")
     TWILIO_AUTH_TOKEN: str = Field(default=_toml_config["whatsapp"]["auth_token"], env="TWILIO_AUTH_TOKEN")
     TWILIO_WHATSAPP_FROM: str = Field(default=_toml_config["whatsapp"]["from_number"], env="TWILIO_WHATSAPP_FROM")
+    FAST2SMS_API_KEY: str = Field(default="", env="FAST2SMS_API_KEY")
+
+    # SMTP email alerts
+    SMTP_HOST: str = Field(default="", env="SMTP_HOST")
+    SMTP_PORT: int = Field(default=587, env="SMTP_PORT")
+    SMTP_USER: str = Field(default="", env="SMTP_USER")
+    SMTP_PASSWORD: str = Field(default="", env="SMTP_PASSWORD")
+    SMTP_FROM_EMAIL: str = Field(default="", env="SMTP_FROM_EMAIL")
+    SMTP_USE_TLS: bool = Field(default=True, env="SMTP_USE_TLS")
     
     # Crisis Detection
     CRISIS_DETECTION_THRESHOLD: int = Field(default=_toml_config["crisis_detection"]["threshold"])
-    GUARDIAN_ALERT_COOLDOWN_HOURS: int = Field(default=_toml_config["crisis_detection"]["guardian_alert_cooldown_hours"])
+    GUARDIAN_ALERT_COOLDOWN_HOURS: int = Field(
+        default=_toml_config["crisis_detection"]["guardian_alert_cooldown_hours"],
+        env="GUARDIAN_ALERT_COOLDOWN_HOURS",
+    )
     
     # Data Retention
     CONVERSATION_RETENTION_DAYS: int = Field(default=_toml_config["data_retention"]["conversation_days"])

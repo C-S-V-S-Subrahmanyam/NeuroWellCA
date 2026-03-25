@@ -4,6 +4,7 @@ Main FastAPI application entry point
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -30,6 +31,8 @@ async def lifespan(app: FastAPI):
     # Create database tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS guardian_email VARCHAR(255)"))
+        await conn.execute(text("ALTER TABLE guardian_alerts ALTER COLUMN guardian_contact TYPE VARCHAR(255)"))
     
     # Initialize Qdrant collections
     await qdrant_service.initialize_collections()

@@ -56,6 +56,7 @@ class User(Base):
     full_name = Column(String(100))
     age = Column(Integer)
     guardian_contact = Column(String(20))
+    guardian_email = Column(String(255))
     
     has_completed_initial_assessment = Column(Boolean, default=False)
     email_verified = Column(Boolean, default=False)
@@ -397,7 +398,7 @@ class GuardianAlert(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     crisis_log_id = Column(Integer, ForeignKey("crisis_logs.id"))
     
-    guardian_contact = Column(String(20), nullable=False)
+    guardian_contact = Column(String(255), nullable=False)
     alert_sent = Column(Boolean, default=False)
     alert_method = Column(String(20))  # 'whatsapp', 'sms', 'email'
     

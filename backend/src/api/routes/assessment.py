@@ -12,6 +12,7 @@ from src.models.database import get_db
 from src.models.models import User, Assessment, RiskLevel
 from src.api.routes.auth import get_current_user
 from src.api.dependencies import require_permission, require_any_permission
+from src.services.guardian_alert_service import guardian_alert_service
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,34 @@ async def submit_assessment(
         await db.refresh(assessment)
         
         logger.info(f"✅ Assessment submitted by user {current_user.username}")
+        
+        # Send guardian alert if risk level is SEVERE or MODERATELY_SEVERE
+        if risk_level in [RiskLevel.SEVERE, RiskLevel.MODERATELY_SEVERE]:
+            assessment_message = (
+                f"PHQ-9: {phq9_score}/27, GAD-7: {gad7_score}/21, Stress: {assessment_data.stress_level}/10\n"
+                f"Risk Level: {risk_level.value}"
+            )
+            keywords = []
+            
+            # Determine keywords based on risk level
+            if risk_level == RiskLevel.SEVERE:
+                keywords = ["assessment", "severe_risk"]
+            elif risk_level == RiskLevel.MODERATELY_SEVERE:
+                keywords = ["assessment", "moderately_severe_risk"]
+            
+            # Send guardian alert
+            alert_result = await guardian_alert_service.send_if_needed(
+                db=db,
+                user=current_user,
+                message_text=assessment_message,
+                crisis_score=5.0 if risk_level == RiskLevel.SEVERE else 3.0,
+                keywords=keywords,
+            )
+            
+            logger.warning(
+                f"⚠️ HIGH RISK ASSESSMENT for user {current_user.username}: "
+                f"Risk Level={risk_level.value}, Guardian Alert Result={alert_result}"
+            )
         
         return assessment
         

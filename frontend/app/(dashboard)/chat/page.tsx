@@ -19,6 +19,7 @@ export default function ChatPage() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
   const [crisisAlert, setCrisisAlert] = useState<string | null>(null);
+  const [guardianAlertStatus, setGuardianAlertStatus] = useState<{ sent: boolean; reason: string; provider?: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lastMessageIndex, setLastMessageIndex] = useState(-1);
   const [feedbackByMessageId, setFeedbackByMessageId] = useState<Record<number, 'positive' | 'negative'>>({});
@@ -90,6 +91,7 @@ export default function ChatPage() {
     setIsSending(true);
     setError('');
     setCrisisAlert(null);
+    setGuardianAlertStatus(null);
 
     const tempMessage: ChatMessage = {
       role: 'user',
@@ -103,6 +105,11 @@ export default function ChatPage() {
 
       if (response.crisis_detected) {
         setCrisisAlert(response.crisis_message || 'Crisis detected. Please seek immediate help.');
+        setGuardianAlertStatus({
+          sent: !!response.guardian_alert_sent,
+          reason: response.guardian_alert_reason || 'unknown',
+          provider: response.guardian_alert_provider,
+        });
       }
 
       setMessages((prev) => {
@@ -368,6 +375,20 @@ export default function ChatPage() {
           <div className="bg-red-600 text-white p-4 shadow-lg">
             <p className="font-bold text-center">⚠️ {crisisAlert}</p>
             <p className="text-sm text-center mt-1">National Suicide Prevention Lifeline: 988</p>
+            {guardianAlertStatus && (
+              <div className="mt-2 flex justify-center">
+                <span
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                    guardianAlertStatus.sent
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-amber-100 text-amber-900'
+                  }`}
+                >
+                  {guardianAlertStatus.sent ? '✅ Alert Delivered' : '⚠️ Alert Not Sent'}
+                  <span className="opacity-80">({guardianAlertStatus.reason})</span>
+                </span>
+              </div>
+            )}
           </div>
         )}
 

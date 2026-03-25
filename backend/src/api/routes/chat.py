@@ -71,6 +71,9 @@ class ChatResponse(BaseModel):
     crisis_detected: bool = False
     crisis_message: Optional[str] = None
     crisis_resources: Optional[List[dict]] = None
+    guardian_alert_sent: bool = False
+    guardian_alert_reason: Optional[str] = None
+    guardian_alert_provider: Optional[str] = None
 
 
 class SessionMessage(BaseModel):
@@ -203,13 +206,14 @@ async def send_message_stream(
                 yield f"event: crisis\ndata: {json.dumps({'detected': True})}\n\n"
 
             if guardian_alert_needed:
-                await guardian_alert_service.send_if_needed(
+                alert_result = await guardian_alert_service.send_if_needed(
                     db=db,
                     user=current_user,
                     message_text=message_data.message,
                     crisis_score=crisis_result.get("score", 0),
                     keywords=crisis_result.get("keywords_detected", []),
                 )
+                logger.warning("Guardian alert result (stream) for user %s: %s", current_user.id, alert_result)
             
             # Get conversation context
             context_messages = await qdrant_service.get_session_context(session_id, limit=10)
@@ -342,6 +346,18 @@ async def send_message(
         crisis_result = crisis_service.detect_crisis(message_data.message)
         crisis_detected = crisis_result.get("is_crisis", False)
         guardian_alert_needed = _should_alert_guardian(crisis_result, message_data.message)
+        alert_result: dict = {"sent": False, "reason": "not_triggered"}
+
+        # Trigger guardian alert early so crisis notifications are not blocked by later failures.
+        if guardian_alert_needed:
+            alert_result = await guardian_alert_service.send_if_needed(
+                db=db,
+                user=current_user,
+                message_text=message_data.message,
+                crisis_score=crisis_result.get("score", 0),
+                keywords=crisis_result.get("keywords_detected", []),
+            )
+            logger.warning("Guardian alert result for user %s: %s", current_user.id, alert_result)
         
         # Get conversation context from Qdrant
         context_messages = await qdrant_service.get_session_context(session_id, limit=10)
@@ -375,15 +391,6 @@ async def send_message(
         
         # If crisis detected, override with crisis response
         crisis_message = None
-        if guardian_alert_needed:
-            await guardian_alert_service.send_if_needed(
-                db=db,
-                user=current_user,
-                message_text=message_data.message,
-                crisis_score=crisis_result.get("score", 0),
-                keywords=crisis_result.get("keywords_detected", []),
-            )
-
         if crisis_detected:
             crisis_message = (
                 "🚨 I'm really concerned about what you're sharing. Your safety is the most important thing, "
@@ -453,7 +460,10 @@ async def send_message(
             session_id=session_id,
             user_message_id=user_conversation.id,
             assistant_message_id=ai_conversation.id,
-            crisis_detected=crisis_detected
+            crisis_detected=crisis_detected,
+            guardian_alert_sent=bool(alert_result.get("sent", False)),
+            guardian_alert_reason=alert_result.get("reason"),
+            guardian_alert_provider=alert_result.get("provider"),
         )
         
         if crisis_detected:

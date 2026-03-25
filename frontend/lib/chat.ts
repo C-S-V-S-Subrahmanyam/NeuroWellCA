@@ -15,6 +15,9 @@ export interface ChatResponse {
   crisis_detected: boolean;
   crisis_message?: string;
   crisis_resources?: any[];
+  guardian_alert_sent?: boolean;
+  guardian_alert_reason?: string;
+  guardian_alert_provider?: string;
 }
 
 export interface SessionMessage {

@@ -62,7 +62,7 @@ from_number = ""  # Override with TWILIO_WHATSAPP_FROM environment variable (for
 
 [crisis_detection]
 threshold = 2
-guardian_alert_cooldown_hours = 24
+guardian_alert_cooldown_hours = 0
 
 [data_retention]
 conversation_days = 30
