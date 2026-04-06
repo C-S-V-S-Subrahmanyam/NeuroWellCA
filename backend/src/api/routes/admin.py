@@ -11,6 +11,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
+import httpx
 
 from src.models.database import get_db
 from src.models.models import (
@@ -363,26 +364,133 @@ class LlmProviderAdminUpdate(BaseModel):
     is_default: Optional[bool] = None
 
 
+class LlmProviderTestRequest(BaseModel):
+    provider_type: str
+    model_name: str
+    base_url: Optional[str] = None
+    api_key: Optional[str] = None
+
+
+class LlmProviderReorderRequest(BaseModel):
+    provider_ids: List[int]
+
+
+def _provider_model_name(provider: LlmProvider) -> str:
+    cfg = provider.config or {}
+    if cfg.get("model"):
+        return str(cfg.get("model"))
+    if provider.models and len(provider.models) > 0:
+        return str(provider.models[0])
+    return ""
+
+
+def _provider_fallback_order(provider: LlmProvider) -> int:
+    cfg = provider.config or {}
+    raw = cfg.get("fallback_order")
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return 10_000
+
+
+def _set_provider_fallback_order(provider: LlmProvider, order: int) -> None:
+    cfg = dict(provider.config or {})
+    cfg["fallback_order"] = int(order)
+    provider.config = cfg
+
+
+async def _run_provider_health_test(
+    provider_type: str,
+    model_name: str,
+    base_url: Optional[str],
+    api_key: Optional[str],
+) -> Dict[str, Any]:
+    normalized_type = (provider_type or "").strip().lower()
+    model = (model_name or "").strip()
+    key = (api_key or "").strip()
+    url = (base_url or "").strip()
+
+    if normalized_type in {"openai", "chatgpt", "deepseek", "custom"}:
+        if not key:
+            return {"success": False, "message": "API key is required for this provider."}
+        resolved_url = url or ("https://api.deepseek.com/v1" if normalized_type == "deepseek" else "https://api.openai.com/v1")
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": "ping"}],
+            "max_tokens": 5,
+        }
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                started = datetime.now()
+                response = await client.post(f"{resolved_url.rstrip('/')}/chat/completions", json=payload, headers=headers)
+                elapsed = int((datetime.now() - started).total_seconds() * 1000)
+            if response.status_code == 200:
+                return {"success": True, "message": "Connection successful", "response_time_ms": elapsed}
+            return {"success": False, "message": f"Provider returned {response.status_code}: {response.text[:220]}"}
+        except Exception as exc:
+            return {"success": False, "message": f"Connection failed: {exc}"}
+
+    if normalized_type == "gemini":
+        if not key:
+            return {"success": False, "message": "API key is required for Gemini."}
+        resolved_url = url or "https://generativelanguage.googleapis.com/v1beta"
+        endpoint = f"{resolved_url.rstrip('/')}/models/{model}:generateContent"
+        payload = {"contents": [{"parts": [{"text": "ping"}]}]}
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                started = datetime.now()
+                response = await client.post(endpoint, params={"key": key}, json=payload)
+                elapsed = int((datetime.now() - started).total_seconds() * 1000)
+            if response.status_code == 200:
+                return {"success": True, "message": "Connection successful", "response_time_ms": elapsed}
+            return {"success": False, "message": f"Provider returned {response.status_code}: {response.text[:220]}"}
+        except Exception as exc:
+            return {"success": False, "message": f"Connection failed: {exc}"}
+
+    if normalized_type == "ollama":
+        resolved_url = url or "http://localhost:11434"
+        payload = {
+            "model": model,
+            "prompt": "ping",
+            "stream": False,
+            "options": {"num_predict": 5},
+        }
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                started = datetime.now()
+                response = await client.post(f"{resolved_url.rstrip('/')}/api/generate", json=payload)
+                elapsed = int((datetime.now() - started).total_seconds() * 1000)
+            if response.status_code == 200:
+                return {"success": True, "message": "Connection successful", "response_time_ms": elapsed}
+            return {"success": False, "message": f"Provider returned {response.status_code}: {response.text[:220]}"}
+        except Exception as exc:
+            return {"success": False, "message": f"Connection failed: {exc}"}
+
+    return {"success": False, "message": f"Unsupported provider_type '{provider_type}'"}
+
+
 @router.get("/llm/providers")
 async def list_admin_llm_providers(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """List configured providers for admin UI."""
-    result = await db.execute(
-        select(LlmProvider)
-        .where(LlmProvider.deleted_at == None)
-        .order_by(LlmProvider.is_active.desc(), LlmProvider.is_default.desc(), LlmProvider.updated_at.desc())
-    )
+    result = await db.execute(select(LlmProvider).where(LlmProvider.deleted_at == None))
     providers = result.scalars().all()
 
-    def model_name(p: LlmProvider) -> str:
-        cfg = p.config or {}
-        if cfg.get("model"):
-            return str(cfg.get("model"))
-        if p.models and len(p.models) > 0:
-            return str(p.models[0])
-        return ""
+    sorted_providers = sorted(
+        providers,
+        key=lambda p: (
+            0 if p.is_default else 1,
+            _provider_fallback_order(p),
+            0 if p.is_active else 1,
+            (p.name or "").lower(),
+        ),
+    )
 
     return {
         "providers": [
@@ -390,15 +498,16 @@ async def list_admin_llm_providers(
                 "id": p.id,
                 "name": p.name,
                 "provider_type": p.provider_type,
-                "model_name": model_name(p),
+                "model_name": _provider_model_name(p),
                 "base_url": p.base_url,
                 "has_api_key": bool((p.api_key_encrypted or "").strip()),
                 "is_active": p.is_active,
                 "is_default": p.is_default,
+                "fallback_order": _provider_fallback_order(p),
                 "updated_at": p.updated_at,
                 "created_at": p.created_at,
             }
-            for p in providers
+            for p in sorted_providers
         ]
     }
 
@@ -455,12 +564,17 @@ async def create_admin_llm_provider(
     if payload.is_default:
         await db.execute(LlmProvider.__table__.update().values(is_default=False))
 
+    existing = await db.execute(select(LlmProvider).where(LlmProvider.deleted_at == None))
+    existing_providers = existing.scalars().all()
+    max_order = max([_provider_fallback_order(p) for p in existing_providers if not p.is_default] or [0])
+    fallback_order = 0 if payload.is_default else max_order + 1
+
     provider = LlmProvider(
         name=payload.name.strip(),
         provider_type=provider_type,
         base_url=(payload.base_url or "").strip() or None,
         api_key_encrypted=(payload.api_key or "").strip(),
-        config={"model": payload.model_name.strip()},
+        config={"model": payload.model_name.strip(), "fallback_order": fallback_order},
         models=[payload.model_name.strip()],
         is_active=payload.is_active,
         is_default=payload.is_default,
@@ -508,6 +622,8 @@ async def update_admin_llm_provider(
         provider.is_active = payload.is_active
     if payload.is_default is not None:
         provider.is_default = payload.is_default
+        if payload.is_default:
+            _set_provider_fallback_order(provider, 0)
 
     provider.updated_at = datetime.now()
     await db.commit()
@@ -548,6 +664,110 @@ async def activate_admin_llm_provider(
         "provider_name": provider.name,
         "provider_type": provider.provider_type,
     }
+
+
+@router.post("/llm/providers/{provider_id}/set-default")
+async def set_default_admin_llm_provider(
+    provider_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Pin selected provider as default at the top of fallback list."""
+    result = await db.execute(
+        select(LlmProvider).where(LlmProvider.id == provider_id, LlmProvider.deleted_at == None)
+    )
+    provider = result.scalar_one_or_none()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    await db.execute(LlmProvider.__table__.update().values(is_default=False))
+    provider.is_default = True
+    _set_provider_fallback_order(provider, 0)
+    provider.updated_at = datetime.now()
+    await db.commit()
+
+    return {"message": "Default provider updated", "provider_id": provider.id}
+
+
+@router.post("/llm/providers/reorder")
+async def reorder_admin_llm_providers(
+    payload: LlmProviderReorderRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Reorder non-default fallback providers while keeping default provider at top."""
+    result = await db.execute(select(LlmProvider).where(LlmProvider.deleted_at == None))
+    providers = result.scalars().all()
+    provider_map = {p.id: p for p in providers}
+
+    non_default_ids = [p.id for p in providers if not p.is_default]
+    seen = set()
+    ordered_ids = []
+    for pid in payload.provider_ids:
+        if pid in non_default_ids and pid not in seen:
+            ordered_ids.append(pid)
+            seen.add(pid)
+    for pid in non_default_ids:
+        if pid not in seen:
+            ordered_ids.append(pid)
+
+    for idx, pid in enumerate(ordered_ids, start=1):
+        provider = provider_map.get(pid)
+        if provider:
+            _set_provider_fallback_order(provider, idx)
+            provider.updated_at = datetime.now()
+
+    await db.commit()
+    return {"message": "Fallback order updated"}
+
+
+@router.post("/llm/providers/{provider_id}/test")
+async def test_admin_llm_provider(
+    provider_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Test stored API key/model/base URL for one configured provider."""
+    result = await db.execute(
+        select(LlmProvider).where(LlmProvider.id == provider_id, LlmProvider.deleted_at == None)
+    )
+    provider = result.scalar_one_or_none()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    test_result = await _run_provider_health_test(
+        provider_type=provider.provider_type,
+        model_name=_provider_model_name(provider),
+        base_url=provider.base_url,
+        api_key=provider.api_key_encrypted,
+    )
+
+    provider.last_health_check = datetime.now()
+    provider.health_status = "healthy" if test_result.get("success") else "unhealthy"
+    provider.health_message = test_result.get("message")
+    provider.updated_at = datetime.now()
+    await db.commit()
+
+    return {
+        "provider_id": provider.id,
+        "provider_name": provider.name,
+        **test_result,
+    }
+
+
+@router.post("/llm/providers/test-config")
+async def test_admin_llm_provider_config(
+    payload: LlmProviderTestRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Test a provider configuration before saving it."""
+    test_result = await _run_provider_health_test(
+        provider_type=payload.provider_type,
+        model_name=payload.model_name,
+        base_url=payload.base_url,
+        api_key=payload.api_key,
+    )
+    return test_result
 
 
 @router.delete("/llm/providers/{provider_id}")

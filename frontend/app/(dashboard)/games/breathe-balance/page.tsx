@@ -49,7 +49,7 @@ export default function BreatheBalancePage() {
 
   const circleStyle = useMemo(() => {
     if (phase === 'Inhale') return 'scale-110 bg-blue-500';
-    if (phase === 'Hold') return 'scale-100 bg-violet-500 animate-pulse';
+    if (phase === 'Hold') return 'scale-100 bg-sky-500 animate-pulse';
     return 'scale-90 bg-emerald-500';
   }, [phase]);
 
@@ -62,7 +62,7 @@ export default function BreatheBalancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-900 via-indigo-900 to-slate-900 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-900 via-blue-900 to-slate-900 text-white p-6">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <Link href="/games" className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg">← Back</Link>

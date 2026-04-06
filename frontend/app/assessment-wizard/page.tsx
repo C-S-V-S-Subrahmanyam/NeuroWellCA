@@ -166,20 +166,20 @@ export default function AssessmentWizard() {
 
   if (section === 'intro') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 flex items-center justify-center p-6">
         <div className="max-w-2xl w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-blue-100">
           <div className="text-center">
-            <div className="inline-block p-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl shadow-2xl mb-6 animate-pulse">
+            <div className="inline-block p-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl shadow-2xl mb-6 animate-pulse">
               <span className="text-6xl">🧠</span>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-blue-700 bg-clip-text text-transparent mb-4">
               Mental Health Assessment
             </h1>
             <p className="text-lg text-gray-700 mb-8">
               Let's understand how you're feeling with standard clinical assessments.
             </p>
             
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 rounded-r-xl mb-8 text-left shadow-inner">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-50 border-l-4 border-blue-500 p-6 rounded-r-xl mb-8 text-left shadow-inner">
               <h3 className="font-bold text-blue-900 mb-4 text-lg flex items-center gap-2">
                 <span className="text-2xl">📋</span> What to expect:
               </h3>
@@ -192,16 +192,16 @@ export default function AssessmentWizard() {
                   </div>
                 </li>
                 <li className="flex items-start gap-3 group">
-                  <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:scale-110 transition-transform">2</div>
+                  <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:scale-110 transition-transform">2</div>
                   <div>
-                    <span className="font-semibold text-indigo-900">GAD-7 Anxiety Screening</span>
+                    <span className="font-semibold text-blue-900">GAD-7 Anxiety Screening</span>
                     <p className="text-sm text-gray-600">7 questions about anxiety (2-3 min)</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3 group">
-                  <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:scale-110 transition-transform">3</div>
+                  <div className="w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:scale-110 transition-transform">3</div>
                   <div>
-                    <span className="font-semibold text-purple-900">Stress Level Assessment</span>
+                    <span className="font-semibold text-cyan-900">Stress Level Assessment</span>
                     <p className="text-sm text-gray-600">Rate your stress 0-10 (1 min)</p>
                   </div>
                 </li>
@@ -217,7 +217,7 @@ export default function AssessmentWizard() {
 
             <button
               onClick={handleNext}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-5 px-8 rounded-2xl shadow-2xl transition-all duration-300 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-[0.98] mb-3"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-5 px-8 rounded-2xl shadow-2xl transition-all duration-300 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-[0.98] mb-3"
             >
               <span className="flex items-center justify-center gap-3 text-lg">
                 <span>Begin Assessment</span>
@@ -241,7 +241,7 @@ export default function AssessmentWizard() {
 
   if (section === 'stress') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 flex items-center justify-center p-6">
         <div className="max-w-3xl w-full">
           {/* Progress */}
           <div className="mb-8">
@@ -251,7 +251,7 @@ export default function AssessmentWizard() {
             </div>
             <div className="w-full h-2 bg-white rounded-full overflow-hidden shadow-inner">
               <div
-                className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-blue-600 to-blue-600 transition-all duration-500"
                 style={{ width: `${getTotalProgress()}%` }}
               />
             </div>
@@ -259,7 +259,7 @@ export default function AssessmentWizard() {
 
           <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-blue-100">
             <div className="mb-8">
-              <span className="bg-purple-100 text-purple-700 text-sm font-semibold px-4 py-2 rounded-full">Stress Assessment</span>
+              <span className="bg-cyan-100 text-cyan-700 text-sm font-semibold px-4 py-2 rounded-full">Stress Assessment</span>
             </div>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -343,7 +343,7 @@ export default function AssessmentWizard() {
               <button
                 onClick={handleNext}
                 disabled={!canContinue()}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               >
                 Next
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -359,7 +359,7 @@ export default function AssessmentWizard() {
 
   if (section === 'notes') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 flex items-center justify-center p-6">
         <div className="max-w-3xl w-full">
           {/* Progress */}
           <div className="mb-8">
@@ -368,13 +368,13 @@ export default function AssessmentWizard() {
               <span className="text-sm font-medium text-blue-600">80%</span>
             </div>
             <div className="w-full h-2 bg-white rounded-full overflow-hidden shadow-inner">
-              <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 w-4/5" />
+              <div className="h-full bg-gradient-to-r from-blue-600 to-blue-600 w-4/5" />
             </div>
           </div>
 
           <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-10">
             <div className="mb-8">
-              <span className="bg-purple-100 text-purple-700 text-sm font-semibold px-4 py-2 rounded-full">Final Step (Optional)</span>
+              <span className="bg-cyan-100 text-cyan-700 text-sm font-semibold px-4 py-2 rounded-full">Final Step (Optional)</span>
             </div>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -434,10 +434,10 @@ export default function AssessmentWizard() {
   const questions = getCurrentQuestions();
   const currentQuestion = questions[currentQuestionIndex];
   const sectionName = section === 'phq9' ? 'Depression Screening (PHQ-9)' : 'Anxiety Screening (GAD-7)';
-  const sectionColor = section === 'phq9' ? 'blue' : 'indigo';
+  const sectionColor = section === 'phq9' ? 'blue' : 'blue';
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 flex items-center justify-center p-4">
       <div className="max-w-3xl w-full">
         {/* Progress */}
         <div className="mb-6">
@@ -447,7 +447,7 @@ export default function AssessmentWizard() {
           </div>
           <div className="w-full h-1.5 bg-white rounded-full overflow-hidden shadow-inner">
             <div
-              className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-blue-600 to-blue-600 transition-all duration-500"
               style={{ width: `${getTotalProgress()}%` }}
             />
           </div>
@@ -548,7 +548,7 @@ export default function AssessmentWizard() {
             <button
               onClick={handleNext}
               disabled={!canContinue()}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+              className="bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
             >
               {currentQuestionIndex === questions.length - 1 && section === 'gad7' ? 'Continue →' : 'Next →'}
             </button>

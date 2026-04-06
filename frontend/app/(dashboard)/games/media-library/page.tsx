@@ -39,7 +39,7 @@ const videoModules = [
 
 export default function MediaLibraryPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-cyan-950 to-blue-950 text-white p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <Link href="/games" className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg">← Back</Link>

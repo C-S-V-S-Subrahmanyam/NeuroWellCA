@@ -55,7 +55,7 @@ const items = [
 
 export default function GamesHubPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-100 py-10 px-4">
+    <div className="min-h-screen py-10 px-4" style={{ background: 'linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-mid) 50%, var(--app-bg-end) 100%)' }}>
       <div className="max-w-6xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-extrabold text-slate-900">Games & Exercises</h1>

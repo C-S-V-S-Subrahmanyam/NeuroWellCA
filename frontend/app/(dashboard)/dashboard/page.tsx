@@ -94,111 +94,111 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-mid) 50%, var(--app-bg-end) 100%)' }}>
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading your dashboard...</p>
+          <p className="mt-4" style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-10 px-4">
+    <div className="min-h-screen py-10 px-4" style={{ background: 'linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-mid) 50%, var(--app-bg-end) 100%)' }}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent mb-2">Mental Health Dashboard</h1>
-          <p className="text-gray-600">Track your mental well-being journey</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Mental Health Dashboard</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Track your mental well-being journey</p>
         </div>
 
         {stats ? (
           <>
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
+              <div className="glass-effect rounded-2xl shadow-xl p-6">
                 <div className="text-center">
-                  <div className="inline-block p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl mb-3">
+                  <div className="inline-block p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mb-3">
                     <span className="text-2xl">📊</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Total Assessments</p>
-                  <p className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{stats.totalAssessments}</p>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Total Assessments</p>
+                  <p className="text-5xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats.totalAssessments}</p>
                 </div>
               </div>
 
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
+              <div className="glass-effect rounded-2xl shadow-xl p-6">
                 <div className="text-center">
-                  <div className="inline-block p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl mb-3">
+                  <div className="inline-block p-3 bg-gradient-to-br from-cyan-500 to-pink-600 rounded-xl mb-3">
                     <span className="text-2xl">😔</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Latest PHQ-9 Score</p>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Latest PHQ-9 Score</p>
                   <p className={`text-5xl font-bold ${getSeverityColor(stats.latestPhq9, 'phq9')}`}>
-                    {stats.latestPhq9}<span className="text-2xl text-gray-400">/27</span>
+                    {stats.latestPhq9}<span className="text-2xl" style={{ color: 'var(--text-secondary)' }}>/27</span>
                   </p>
-                  <p className="text-sm font-semibold text-gray-600 mt-2">
+                  <p className="text-sm font-semibold mt-2" style={{ color: 'var(--text-secondary)' }}>
                     {getSeverityLabel(stats.latestPhq9, 'phq9')}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
+              <div className="glass-effect rounded-2xl shadow-xl p-6">
                 <div className="text-center">
                   <div className="inline-block p-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl mb-3">
                     <span className="text-2xl">😰</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Latest GAD-7 Score</p>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Latest GAD-7 Score</p>
                   <p className={`text-5xl font-bold ${getSeverityColor(stats.latestGad7, 'gad7')}`}>
-                    {stats.latestGad7}<span className="text-2xl text-gray-400">/21</span>
+                    {stats.latestGad7}<span className="text-2xl" style={{ color: 'var(--text-secondary)' }}>/21</span>
                   </p>
-                  <p className="text-sm font-semibold text-gray-600 mt-2">
+                  <p className="text-sm font-semibold mt-2" style={{ color: 'var(--text-secondary)' }}>
                     {getSeverityLabel(stats.latestGad7, 'gad7')}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-blue-100">
+              <div className="glass-effect rounded-2xl shadow-xl p-6">
                 <div className="text-center">
                   <div className="inline-block p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mb-3">
                     <span className="text-2xl">🛡️</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Overall Risk Level</p>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Overall Risk Level</p>
                   <div className="mt-3">
                     <span className={`px-5 py-2 rounded-xl text-lg font-bold shadow-md ${stats.riskBg} ${stats.riskColor}`}>
                       {stats.riskLevel}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mt-3">
-                    Stress: <span className="font-bold text-gray-900">{stats.latestStress}/10</span>
+                  <p className="text-sm mt-3" style={{ color: 'var(--text-secondary)' }}>
+                    Stress: <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{stats.latestStress}/10</span>
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Assessment History */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-8 border border-blue-100"><h2 className="text-2xl font-bold text-gray-900 mb-6">Assessment History</h2>
+            <div className="glass-effect rounded-2xl shadow-xl p-8"><h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Assessment History</h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">PHQ-9</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">GAD-7</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Stress</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Risk Level</th>
+                    <tr className="border-b" style={{ borderColor: 'var(--surface-border)' }}>
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>Date</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>PHQ-9</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>GAD-7</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>Stress</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>Risk Level</th>
                     </tr>
                   </thead>
                   <tbody>
                     {history.map((assessment, idx) => {
                       const riskInfo = calculateRiskLevel(assessment.phq9_score, assessment.gad7_score, assessment.stress_level);
                       return (
-                        <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm text-gray-900">
+                        <tr key={idx} className="border-b hover:bg-black/5" style={{ borderColor: 'var(--surface-border)' }}>
+                          <td className="py-3 px-4 text-sm" style={{ color: 'var(--text-primary)' }}>
                             {new Date(assessment.created_at).toLocaleDateString()}
                           </td>
                           <td className="py-3 px-4">
                             <span className={`font-semibold ${getSeverityColor(assessment.phq9_score, 'phq9')}`}>
                               {assessment.phq9_score}
                             </span>
-                            <span className="text-gray-400 ml-1 text-xs">
+                            <span className="ml-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                               ({getSeverityLabel(assessment.phq9_score, 'phq9')})
                             </span>
                           </td>
@@ -206,11 +206,11 @@ export default function DashboardPage() {
                             <span className={`font-semibold ${getSeverityColor(assessment.gad7_score, 'gad7')}`}>
                               {assessment.gad7_score}
                             </span>
-                            <span className="text-gray-400 ml-1 text-xs">
+                            <span className="ml-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                               ({getSeverityLabel(assessment.gad7_score, 'gad7')})
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-700">
+                          <td className="py-3 px-4 text-sm" style={{ color: 'var(--text-primary)' }}>
                             {assessment.stress_level}/10
                           </td>
                           <td className="py-3 px-4">
@@ -228,7 +228,7 @@ export default function DashboardPage() {
 
             {/* Quick Actions */}
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-2xl p-8 text-white">
+              <div className="rounded-2xl shadow-2xl p-8 text-white" style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%)' }}>
                 <div className="text-5xl mb-4">📝</div>
                 <h3 className="text-2xl font-bold mb-3">Start New Assessment</h3>
                 <p className="text-blue-100 mb-6">
@@ -236,21 +236,22 @@ export default function DashboardPage() {
                 </p>
                 <button
                   onClick={() => router.push('/assessment-wizard')}
-                  className="w-full px-6 py-4 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
+                  className="w-full px-6 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl"
+                  style={{ background: '#ffffff', color: '#1d4ed8' }}
                 >
                   Take Assessment →
                 </button>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-2xl p-8 text-white">
+              <div className="bg-gradient-to-br from-cyan-500 to-pink-600 rounded-2xl shadow-2xl p-8 text-white">
                 <div className="text-5xl mb-4">💬</div>
                 <h3 className="text-2xl font-bold mb-3">Continue Chatting</h3>
-                <p className="text-purple-100 mb-6">
+                <p className="text-cyan-100 mb-6">
                   Talk to our AI counselor about your thoughts and feelings.
                 </p>
                 <button
                   onClick={() => router.push('/chat')}
-                  className="w-full px-6 py-4 bg-white text-purple-600 rounded-xl font-bold hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl"
+                  className="w-full px-6 py-4 bg-white text-cyan-600 rounded-xl font-bold hover:bg-cyan-50 transition-all shadow-lg hover:shadow-xl"
                 >
                   Open Chat →
                 </button>
@@ -273,7 +274,7 @@ export default function DashboardPage() {
           </>
         ) : (
           <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-12 border border-blue-100 text-center">
-            <div className="inline-block p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl shadow-xl mb-6">
+            <div className="inline-block p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl shadow-xl mb-6">
               <span className="text-7xl">📊</span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">No Assessment Data Yet</h2>
@@ -282,7 +283,7 @@ export default function DashboardPage() {
             </p>
             <button
               onClick={() => router.push('/assessment-wizard')}
-              className="px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-xl hover:shadow-2xl text-lg"
+              className="px-10 py-5 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-blue-700 transition-all shadow-xl hover:shadow-2xl text-lg"
             >
               Take Your First Assessment →
             </button>

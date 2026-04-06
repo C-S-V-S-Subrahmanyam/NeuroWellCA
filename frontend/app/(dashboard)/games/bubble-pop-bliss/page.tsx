@@ -29,7 +29,7 @@ export default function BubblePopBlissPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-100 to-indigo-200 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-100 to-blue-200 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <Link href="/games" className="bg-white/70 hover:bg-white px-4 py-2 rounded-lg border border-slate-200">← Back</Link>
@@ -46,7 +46,7 @@ export default function BubblePopBlissPage() {
               style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.size}px`, height: `${b.size}px` }}
             />
           ))}
-          {text && <p className="absolute left-1/2 -translate-x-1/2 top-8 text-xl font-semibold text-indigo-700">{text}</p>}
+          {text && <p className="absolute left-1/2 -translate-x-1/2 top-8 text-xl font-semibold text-blue-700">{text}</p>}
         </div>
       </div>
     </div>

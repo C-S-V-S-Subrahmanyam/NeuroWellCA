@@ -12,6 +12,8 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [appearance, setAppearance] = useState('system');
+  const [accentColor, setAccentColor] = useState('blue');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -30,7 +32,19 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadUser();
+    const storedAppearance = localStorage.getItem('neurowell_appearance') || 'system';
+    const storedAccent = localStorage.getItem('neurowell_accent') || 'blue';
+    setAppearance(storedAppearance);
+    setAccentColor(storedAccent);
   }, []);
+
+  const saveTheme = (nextAppearance: string, nextAccent: string) => {
+    setAppearance(nextAppearance);
+    setAccentColor(nextAccent);
+    localStorage.setItem('neurowell_appearance', nextAppearance);
+    localStorage.setItem('neurowell_accent', nextAccent);
+    window.dispatchEvent(new Event('neurowell-theme-change'));
+  };
 
   const loadUser = async () => {
     try {
@@ -122,10 +136,10 @@ export default function ProfilePage() {
       <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
             Profile Settings
           </h1>
-          <p style={{ color: '#6b7280' }}>Manage your account information and preferences</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Manage your account information and preferences</p>
         </div>
 
         {/* Alerts */}
@@ -144,7 +158,7 @@ export default function ProfilePage() {
           {/* Profile Information Card */}
           <div className="glass-effect" style={{ padding: '2rem', borderRadius: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                 Profile Information
               </h2>
               {!isEditing && (
@@ -165,7 +179,7 @@ export default function ProfilePage() {
                 width: '80px',
                 height: '80px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                background: 'linear-gradient(135deg, var(--accent-600), var(--accent-500))',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -176,13 +190,13 @@ export default function ProfilePage() {
                 {user?.username?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div style={{ marginLeft: '1.5rem' }}>
-                <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937' }}>
+                <div style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                   {user?.username}
                 </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                   {user?.email}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Member since {new Date(user?.created_at).toLocaleDateString()}
                 </div>
               </div>
@@ -230,19 +244,6 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
-                    Guardian Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.guardian_email}
-                    onChange={(e) => setFormData({ ...formData, guardian_email: e.target.value })}
-                    placeholder="Emergency contact email"
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem', outline: 'none' }}
-                  />
-                </div>
-
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                   <button
                     type="submit"
@@ -263,7 +264,7 @@ export default function ProfilePage() {
                         guardian_email: user?.guardian_email || '',
                       });
                     }}
-                    style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', color: '#374151', fontWeight: '500', cursor: 'pointer' }}
+                    style={{ padding: '0.75rem 1.5rem', border: '1px solid var(--surface-border)', borderRadius: '0.5rem', background: 'var(--surface-1)', color: 'var(--text-primary)', fontWeight: '500', cursor: 'pointer' }}
                   >
                     Cancel
                   </button>
@@ -272,28 +273,105 @@ export default function ProfilePage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.25rem' }}>FULL NAME</div>
-                  <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{user?.full_name || 'Not set'}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>FULL NAME</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{user?.full_name || 'Not set'}</div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
+                    Guardian Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.guardian_email}
+                    onChange={(e) => setFormData({ ...formData, guardian_email: e.target.value })}
+                    placeholder="guardian@example.com"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem', outline: 'none' }}
+                  />
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.25rem' }}>AGE</div>
-                  <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{user?.age || 'Not set'}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>AGE</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{user?.age || 'Not set'}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.25rem' }}>GUARDIAN CONTACT</div>
-                  <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{user?.guardian_contact || 'Not set'}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>GUARDIAN CONTACT</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{user?.guardian_contact || 'Not set'}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.25rem' }}>GUARDIAN EMAIL</div>
-                  <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{user?.guardian_email || 'Not set'}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>GUARDIAN EMAIL</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{user?.guardian_email || 'Not set'}</div>
                 </div>
               </div>
             )}
           </div>
 
+          {/* Appearance Card */}
+          <div className="glass-effect" style={{ padding: '2rem', borderRadius: '1rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
+              Appearance
+            </h2>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                Appearance
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={appearance}
+                  onChange={(e) => saveTheme(e.target.value, accentColor)}
+                  style={{ width: '100%', padding: '0.875rem 1rem', border: '1px solid var(--surface-border)', borderRadius: '0.75rem', background: 'var(--surface-1)', color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none' }}
+                >
+                  <option value="system">System</option>
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                Accent Color
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
+                {[
+                  { key: 'blue', label: 'Blue', color: '#3b82f6' },
+                  { key: 'green', label: 'Green', color: '#22c55e' },
+                  { key: 'yellow', label: 'Yellow', color: '#eab308' },
+                  { key: 'pink', label: 'Pink', color: '#ec4899' },
+                  { key: 'orange', label: 'Orange', color: '#f97316' },
+                  { key: 'violet', label: 'Violet', color: '#7c3aed' },
+                  { key: 'black', label: 'Black', color: '#111827' },
+                ].map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => saveTheme(appearance, option.key)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.85rem 1rem',
+                      borderRadius: '0.9rem',
+                      border: accentColor === option.key ? `2px solid ${option.color}` : `1px solid var(--surface-border)`,
+                      background: accentColor === option.key ? 'var(--accent-50)' : 'var(--surface-1)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ width: '0.9rem', height: '0.9rem', borderRadius: '9999px', background: option.color, boxShadow: '0 0 0 4px rgba(255,255,255,0.75)' }} />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+              <p style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Default theme is Blue.
+              </p>
+            </div>
+          </div>
+
           {/* Change Password Card */}
           <div className="glass-effect" style={{ padding: '2rem', borderRadius: '1rem' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
               Change Password
             </h2>
 

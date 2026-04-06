@@ -18,9 +18,36 @@ export interface LoginResponse {
   refresh_token: string;
   token_type: string;
   requires_assessment: boolean;
+  requires_email_verification?: boolean;
+}
+
+export interface SignupOtpStartResponse {
+  message: string;
+  email: string;
+  otp_expires_minutes: number;
 }
 
 export const authService = {
+  async requestSignupOtp(data: {
+    username: string;
+    email: string;
+    password: string;
+    full_name?: string;
+    age?: number;
+    guardian_contact?: string;
+    guardian_email?: string;
+  }): Promise<SignupOtpStartResponse> {
+    console.log('📤 Sending OTP signup request:', { ...data, password: '***' });
+    const response = await api.post('/api/auth/register', data);
+    console.log('✅ OTP sent:', response.data);
+    return response.data;
+  },
+
+  async verifySignupOtp(email: string, otp: string): Promise<User> {
+    const response = await api.post('/api/auth/verify-signup-otp', { email, otp });
+    return response.data;
+  },
+
   async register(data: {
     username: string;
     email: string;
@@ -29,11 +56,8 @@ export const authService = {
     age?: number;
     guardian_contact?: string;
     guardian_email?: string;
-  }): Promise<User> {
-    console.log('📤 Sending registration request:', { ...data, password: '***' });
-    const response = await api.post('/api/auth/register', data);
-    console.log('✅ Registration successful:', response.data);
-    return response.data;
+  }): Promise<SignupOtpStartResponse> {
+    return this.requestSignupOtp(data);
   },
 
   async login(username: string, password: string): Promise<LoginResponse> {

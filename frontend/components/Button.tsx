@@ -18,14 +18,14 @@ export default function Button({
   const baseStyles = 'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantStyles = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+    primary: 'text-white hover:opacity-95',
+    secondary: 'bg-[var(--surface-2)] text-[var(--text-primary)] hover:opacity-95',
     danger: 'bg-red-600 text-white hover:bg-red-700',
   };
 
   return (
     <button
-      className={`${baseStyles} ${variantStyles[variant]} ${className}`}
+      className={`${baseStyles} ${variantStyles[variant]} ${variant === 'primary' ? 'btn-primary' : ''} ${className}`}
       disabled={disabled || isLoading}
       {...props}
     >

@@ -106,7 +106,7 @@ export default function FocusFlowPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 text-white flex items-center justify-center">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-blue-950 text-white flex items-center justify-center">
       <div className="w-full max-w-3xl h-[95vh] flex flex-col justify-between p-4">
 
         {/* Header */}
@@ -135,7 +135,7 @@ export default function FocusFlowPage() {
             <button
               key={n}
               onClick={() => handlePick(n)}
-              className="rounded-2xl bg-gradient-to-br from-indigo-500/30 to-blue-500/30 border border-blue-300/30 hover:bg-blue-500/40 transition text-2xl font-bold flex items-center justify-center active:scale-95"
+              className="rounded-2xl bg-gradient-to-br from-blue-500/30 to-blue-500/30 border border-blue-300/30 hover:bg-blue-500/40 transition text-2xl font-bold flex items-center justify-center active:scale-95"
             >
               {n}
             </button>

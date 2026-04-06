@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import AppTheme from '@/components/AppTheme';
 
 export const metadata: Metadata = {
   title: 'NeurowellCA - Mental Health Support',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AppTheme />
+        {children}
+      </body>
     </html>
   );
 }

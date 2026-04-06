@@ -16,11 +16,16 @@ export default function RegisterPage() {
     full_name: '',
     age: '',
     guardian_contact: '',
+    guardian_email: '',
   });
+  const [otp, setOtp] = useState('');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpMessage, setOtpMessage] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -32,21 +37,18 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await authService.register({
+      const otpResponse = await authService.requestSignupOtp({
         username: formData.username,
         email: formData.email,
         password: formData.password,
         full_name: formData.full_name || undefined,
         age: formData.age ? parseInt(formData.age) : undefined,
         guardian_contact: formData.guardian_contact || undefined,
+        guardian_email: formData.guardian_email || undefined,
       });
-
-      // Auto-login after successful registration
-      await authService.login(formData.username, formData.password);
-      await authService.getCurrentUser();
-      
-      // Redirect to step-by-step assessment wizard (mandatory for new users)
-      router.push('/assessment-wizard');
+      setOtpStep(true);
+      setOtpEmail(otpResponse.email);
+      setOtpMessage(`OTP sent to ${otpResponse.email}. It expires in ${otpResponse.otp_expires_minutes} minutes.`);
     } catch (err: any) {
       // Log the actual error for debugging
       console.error('Registration error:', err);
@@ -76,6 +78,24 @@ export default function RegisterPage() {
     }
   };
 
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await authService.verifySignupOtp(otpEmail, otp.trim());
+      await authService.login(formData.username, formData.password);
+      await authService.getCurrentUser();
+      router.push('/assessment-wizard');
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'OTP verification failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%)', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: '28rem' }}>
@@ -98,7 +118,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {!otpStep ? (
+          <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* Username */}
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
@@ -215,6 +236,22 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Guardian Email */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
+                Guardian Email (Optional)
+              </label>
+              <input
+                type="email"
+                value={formData.guardian_email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, guardian_email: e.target.value })}
+                placeholder="guardian@email.com"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '0.875rem', transition: 'all 0.2s', outline: 'none' }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+              />
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
@@ -222,9 +259,57 @@ export default function RegisterPage() {
               className="btn-primary"
               style={{ width: '100%', opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
             >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? 'Sending OTP...' : 'Send OTP'}
             </button>
           </form>
+          ) : (
+          <form onSubmit={handleOtpVerify} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {otpMessage && (
+              <div style={{ padding: '0.75rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', color: '#1e3a8a', fontSize: '0.875rem' }}>
+                {otpMessage}
+              </div>
+            )}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
+                OTP Code
+              </label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                required
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="Enter 6-digit OTP"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.75rem', fontSize: '1rem', letterSpacing: '0.2rem', transition: 'all 0.2s', outline: 'none' }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || otp.length !== 6}
+              className="btn-primary"
+              style={{ width: '100%', opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+            >
+              {isLoading ? 'Verifying OTP...' : 'Verify OTP & Create Account'}
+            </button>
+
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                setOtpStep(false);
+                setOtp('');
+                setOtpMessage('');
+              }}
+              style={{ width: '100%' }}
+            >
+              Edit Signup Details
+            </button>
+          </form>
+          )}
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: '#6b7280' }}>
             Already have an account?{' '}

@@ -45,7 +45,11 @@ start cmd /k "npm run dev"
 
 echo.
 echo Frontend will open in a new window...
-echo Frontend URL: http://localhost:3000 (or 3001 if 3000 is busy)
+echo Starting Backend Dev Server...
+echo ================================================
+start "Neurowell Backend" cmd /k "cd /d %~dp0backend && python -m uvicorn src.api.main:app --app-dir . --reload --host 0.0.0.0 --port 8000"
+echo.
+echo Starting Frontend (Next.js)...
 echo.
 echo ================================================
 echo 🎉 All services started!

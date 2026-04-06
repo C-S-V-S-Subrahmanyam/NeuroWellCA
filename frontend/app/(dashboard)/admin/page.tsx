@@ -45,6 +45,7 @@ interface LlmProvider {
   has_api_key: boolean;
   is_active: boolean;
   is_default: boolean;
+  fallback_order?: number;
 }
 
 interface LlmForm {
@@ -92,6 +93,9 @@ export default function AdminDashboard() {
   const [savingLlm, setSavingLlm] = useState(false);
   const [activeProvider, setActiveProvider] = useState<ActiveProviderState | null>(null);
   const [providerBusyId, setProviderBusyId] = useState<number | null>(null);
+  const [testingProviderId, setTestingProviderId] = useState<number | null>(null);
+  const [testingDraft, setTestingDraft] = useState(false);
+  const [llmNotice, setLlmNotice] = useState('');
 
   const toErrorMessage = (err: any, fallback: string) => {
     const detail = err?.response?.data?.detail;
@@ -154,6 +158,8 @@ export default function AdminDashboard() {
       // Load LLM providers
       const providerResponse = await api.get('/api/admin/llm/providers');
       setProviders(providerResponse.data.providers || []);
+      const activeResponse = await api.get('/api/admin/llm/active');
+      setActiveProvider(activeResponse.data);
     } catch (err: any) {
       console.error('Failed to load admin data:', err);
       if (!err?.response) {
@@ -180,6 +186,78 @@ export default function AdminDashboard() {
     setProviders(providerResponse.data.providers || []);
     const activeResponse = await api.get('/api/admin/llm/active');
     setActiveProvider(activeResponse.data);
+  };
+
+  const testProvider = async (providerId: number) => {
+    try {
+      setTestingProviderId(providerId);
+      const response = await api.post(`/api/admin/llm/providers/${providerId}/test`);
+      setLlmNotice(
+        response.data.success
+          ? `Test passed for ${response.data.provider_name}${response.data.response_time_ms ? ` (${response.data.response_time_ms} ms)` : ''}`
+          : `Test failed for ${response.data.provider_name}: ${response.data.message}`
+      );
+      await refreshProviders();
+    } catch (err: any) {
+      setError(toErrorMessage(err, 'Failed to test provider'));
+    } finally {
+      setTestingProviderId(null);
+    }
+  };
+
+  const testDraftProvider = async () => {
+    try {
+      setTestingDraft(true);
+      const response = await api.post('/api/admin/llm/providers/test-config', {
+        provider_type: llmForm.provider_type,
+        model_name: llmForm.model_name,
+        base_url: llmForm.base_url || null,
+        api_key: llmForm.api_key || null,
+      });
+      setLlmNotice(
+        response.data.success
+          ? `Draft test passed${response.data.response_time_ms ? ` (${response.data.response_time_ms} ms)` : ''}`
+          : `Draft test failed: ${response.data.message}`
+      );
+    } catch (err: any) {
+      setError(toErrorMessage(err, 'Failed to test draft provider config'));
+    } finally {
+      setTestingDraft(false);
+    }
+  };
+
+  const setDefaultProvider = async (providerId: number) => {
+    try {
+      setProviderBusyId(providerId);
+      await api.post(`/api/admin/llm/providers/${providerId}/set-default`);
+      setLlmNotice('Default provider updated.');
+      await refreshProviders();
+    } catch (err: any) {
+      setError(toErrorMessage(err, 'Failed to set default provider'));
+    } finally {
+      setProviderBusyId(null);
+    }
+  };
+
+  const reorderFallbackProviders = async (orderedIds: number[]) => {
+    try {
+      await api.post('/api/admin/llm/providers/reorder', { provider_ids: orderedIds });
+      await refreshProviders();
+    } catch (err: any) {
+      setError(toErrorMessage(err, 'Failed to reorder fallback providers'));
+    }
+  };
+
+  const moveFallbackProvider = async (providerId: number, direction: 'up' | 'down') => {
+    const fallback = providers.filter((p) => !p.is_default);
+    const idx = fallback.findIndex((p) => p.id === providerId);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= fallback.length) return;
+    const reordered = [...fallback];
+    const [picked] = reordered.splice(idx, 1);
+    reordered.splice(targetIdx, 0, picked);
+    await reorderFallbackProviders(reordered.map((p) => p.id));
   };
 
   const toggleUserActive = async (user: User) => {
@@ -289,9 +367,18 @@ export default function AdminDashboard() {
     );
   });
 
+  const sortedProviders = [...providers].sort((a, b) => {
+    if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
+    const orderA = typeof a.fallback_order === 'number' ? a.fallback_order : 9999;
+    const orderB = typeof b.fallback_order === 'number' ? b.fallback_order : 9999;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.name.localeCompare(b.name);
+  });
+  const fallbackProviders = sortedProviders.filter((p) => !p.is_default);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 font-medium">Loading admin dashboard...</p>
@@ -301,11 +388,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Admin Dashboard
           </h1>
           <p className="text-gray-600">System overview and user management</p>
@@ -345,7 +432,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <span className="text-3xl">📋</span>
-              <span className="text-sm font-semibold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
+              <span className="text-sm font-semibold text-cyan-600 bg-cyan-50 px-3 py-1 rounded-full">
                 Assessments
               </span>
             </div>
@@ -371,7 +458,7 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('users')}
             className={`px-6 py-3 font-semibold rounded-xl transition ${
               activeTab === 'users'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-600 text-white shadow-lg'
                 : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -381,7 +468,7 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('feedback')}
             className={`px-6 py-3 font-semibold rounded-xl transition ${
               activeTab === 'feedback'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-600 text-white shadow-lg'
                 : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -391,7 +478,7 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('llm')}
             className={`px-6 py-3 font-semibold rounded-xl transition ${
               activeTab === 'llm'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-600 text-white shadow-lg'
                 : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -612,7 +699,7 @@ export default function AdminDashboard() {
                       <button
                         disabled={savingFeedbackId === feedback.id}
                         onClick={() => saveFeedback(feedback)}
-                        className="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100"
+                        className="px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100"
                       >
                         Save
                       </button>
@@ -638,7 +725,7 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600 mt-1">
               Add providers first, then explicitly choose one to use globally for all users.
             </p>
-            <div className="mt-3 p-3 rounded-lg border border-indigo-100 bg-indigo-50 text-sm text-indigo-900">
+            <div className="mt-3 p-3 rounded-lg border border-blue-100 bg-blue-50 text-sm text-blue-900">
               {activeProvider?.mode === 'provider' && activeProvider.active_provider
                 ? `Global active provider: ${activeProvider.active_provider.name} (${activeProvider.active_provider.provider_type})`
                 : 'No active external provider. Chat currently uses Ollama fallback.'}
@@ -691,13 +778,25 @@ export default function AdminDashboard() {
             </div>
             <div className="md:col-span-2 lg:col-span-3">
               <button
+                onClick={testDraftProvider}
+                disabled={testingDraft || !llmForm.model_name}
+                className="mr-3 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {testingDraft ? 'Testing...' : 'Test API Key + Model'}
+              </button>
+              <button
                 onClick={createProvider}
                 disabled={savingLlm || !llmForm.name || !llmForm.model_name}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
               >
                 {savingLlm ? 'Saving...' : 'Add Provider'}
               </button>
             </div>
+            {llmNotice && (
+              <div className="md:col-span-2 lg:col-span-3 text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
+                {llmNotice}
+              </div>
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -713,9 +812,14 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {providers.map((provider) => (
+                {sortedProviders.map((provider) => (
                   <tr key={provider.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{provider.name}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      {provider.name}
+                      {provider.is_default && (
+                        <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-semibold uppercase">Default</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{provider.provider_type}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{provider.model_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{provider.has_api_key ? 'Configured' : 'Missing'}</td>
@@ -727,7 +831,23 @@ export default function AdminDashboard() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => testProvider(provider.id)}
+                          disabled={testingProviderId === provider.id}
+                          className="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 disabled:opacity-50"
+                        >
+                          {testingProviderId === provider.id ? 'Testing...' : 'Test'}
+                        </button>
+                        {!provider.is_default && (
+                          <button
+                            onClick={() => setDefaultProvider(provider.id)}
+                            disabled={providerBusyId === provider.id}
+                            className="px-3 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 disabled:opacity-50"
+                          >
+                            Set Default
+                          </button>
+                        )}
                         <button
                           onClick={() => activateProvider(provider.id)}
                           disabled={provider.is_active || providerBusyId === provider.id}
@@ -735,6 +855,24 @@ export default function AdminDashboard() {
                         >
                           {provider.is_active ? 'In Use' : 'Use For Chat'}
                         </button>
+                        {!provider.is_default && (
+                          <>
+                            <button
+                              onClick={() => moveFallbackProvider(provider.id, 'up')}
+                              disabled={fallbackProviders.findIndex((p) => p.id === provider.id) <= 0}
+                              className="px-2 py-1 rounded-lg bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 disabled:opacity-40"
+                            >
+                              Up
+                            </button>
+                            <button
+                              onClick={() => moveFallbackProvider(provider.id, 'down')}
+                              disabled={fallbackProviders.findIndex((p) => p.id === provider.id) === -1 || fallbackProviders.findIndex((p) => p.id === provider.id) >= fallbackProviders.length - 1}
+                              className="px-2 py-1 rounded-lg bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 disabled:opacity-40"
+                            >
+                              Down
+                            </button>
+                          </>
+                        )}
                         <button
                           onClick={() => deleteProvider(provider.id, provider.name)}
                           disabled={providerBusyId === provider.id}
@@ -761,7 +899,7 @@ export default function AdminDashboard() {
         <div className="mt-8 text-center">
           <button
             onClick={() => router.push('/dashboard')}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition shadow-lg"
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-700 transition shadow-lg"
           >
             ← Back to Dashboard
           </button>

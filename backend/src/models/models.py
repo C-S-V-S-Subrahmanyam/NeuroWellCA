@@ -300,6 +300,28 @@ class RevokedToken(Base):
     reason = Column(String(100))  # 'logout', 'password_change', 'admin_revoke'
 
 
+class PendingSignupOTP(Base):
+    """Temporary signup data awaiting OTP verification."""
+    __tablename__ = "pending_signup_otps"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), nullable=False, index=True)
+    email = Column(String(120), nullable=False, unique=True, index=True)
+    password_hash = Column(String(255), nullable=False)
+
+    full_name = Column(String(100))
+    age = Column(Integer)
+    guardian_contact = Column(String(20))
+    guardian_email = Column(String(255))
+
+    otp_code = Column(String(6), nullable=False)
+    otp_expires_at = Column(DateTime(timezone=True), nullable=False)
+    otp_attempts = Column(Integer, default=0)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class Assessment(Base):
     """Mental health assessment model"""
     __tablename__ = "assessments"
