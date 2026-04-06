@@ -217,7 +217,12 @@ export default function AssessmentWizard() {
 
             <button
               onClick={handleNext}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-5 px-8 rounded-2xl shadow-2xl transition-all duration-300 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-[0.98] mb-3"
+              className="w-full font-bold py-5 px-8 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mb-3"
+              style={{
+                background: 'linear-gradient(135deg, var(--accent-700), var(--accent-600))',
+                color: '#ffffff',
+                boxShadow: '0 16px 34px rgba(37, 99, 235, 0.35)',
+              }}
             >
               <span className="flex items-center justify-center gap-3 text-lg">
                 <span>Begin Assessment</span>
@@ -343,7 +348,16 @@ export default function AssessmentWizard() {
               <button
                 onClick={handleNext}
                 disabled={!canContinue()}
-                className="bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                className="font-bold py-3 px-8 rounded-2xl shadow-lg disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                style={canContinue()
+                  ? {
+                      background: 'linear-gradient(135deg, var(--accent-700), var(--accent-600))',
+                      color: '#ffffff',
+                    }
+                  : {
+                      background: '#e5e7eb',
+                      color: '#6b7280',
+                    }}
               >
                 Next
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -407,7 +421,16 @@ export default function AssessmentWizard() {
               <button
                 onClick={handleNext}
                 disabled={isSubmitting}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-10 rounded-2xl shadow-xl disabled:opacity-50 transition-all flex items-center gap-2"
+                className="font-bold py-4 px-10 rounded-2xl shadow-xl disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                style={isSubmitting
+                  ? {
+                      background: '#e5e7eb',
+                      color: '#6b7280',
+                    }
+                  : {
+                      background: 'linear-gradient(135deg, #15803d, #16a34a)',
+                      color: '#ffffff',
+                    }}
               >
                 {isSubmitting ? (
                   <>
@@ -548,7 +571,16 @@ export default function AssessmentWizard() {
             <button
               onClick={handleNext}
               disabled={!canContinue()}
-              className="bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+              className="font-bold py-2.5 px-6 rounded-xl shadow-lg disabled:cursor-not-allowed transition-all text-sm"
+              style={canContinue()
+                ? {
+                    background: 'linear-gradient(135deg, var(--accent-700), var(--accent-600))',
+                    color: '#ffffff',
+                  }
+                : {
+                    background: '#e5e7eb',
+                    color: '#6b7280',
+                  }}
             >
               {currentQuestionIndex === questions.length - 1 && section === 'gad7' ? 'Continue →' : 'Next →'}
             </button>

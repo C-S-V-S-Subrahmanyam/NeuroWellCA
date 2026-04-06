@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from uuid import uuid4
@@ -29,6 +29,18 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+def utc_now() -> datetime:
+    """Return timezone-aware UTC now."""
+    return datetime.now(timezone.utc)
+
+
+def to_utc(dt: datetime) -> datetime:
+    """Normalize datetime (naive or aware) to aware UTC."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 # Pydantic models
@@ -203,7 +215,7 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
             )
 
         otp_code = f"{random.randint(0, 999999):06d}"
-        otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
+        otp_expires_at = utc_now() + timedelta(minutes=10)
 
         pending_email_result = await db.execute(
             select(PendingSignupOTP).where(PendingSignupOTP.email == user_data.email)
@@ -296,7 +308,7 @@ async def verify_signup_otp(payload: SignupOTPVerifyRequest, db: AsyncSession = 
                 detail="No pending signup found for this email"
             )
 
-        if pending.otp_expires_at < datetime.utcnow():
+        if to_utc(pending.otp_expires_at) < utc_now():
             await db.delete(pending)
             await db.commit()
             raise HTTPException(
