@@ -1,0 +1,18 @@
+<svg width="64px" height="64px" viewBox="0 0 1024 1024" version="1" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <defs>
+        <linearGradient id="blueGrad_Info" x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(135)">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#3B82F6" />
+        </linearGradient>
+    </defs>
+    <g id="SVGRepo_iconCarrier">
+        <path
+            d="M512 717a205 205 0 1 0 0-410 205 205 0 0 0 0 410zm0 51a256 256 0 1 1 0-512 256 256 0 0 1 0 512z"
+            fill="url(#blueGrad_Info)">
+        </path>
+        <path
+            d="M485 364c7-7 16-11 27-11s20 4 27 11c8 8 11 17 11 28 0 10-3 19-11 27-7 7-16 11-27 11s-20-4-27-11c-8-8-11-17-11-27 0-11 3-20 11-28zM479 469h66v192h-66z"
+            fill="url(#blueGrad_Info)">
+        </path>
+    </g>
+</svg>

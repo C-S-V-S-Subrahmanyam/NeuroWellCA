@@ -88,7 +88,7 @@ export default function AssessmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4">
+    <div className="min-h-screen py-8 px-4" style={{ background: 'linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-mid) 50%, var(--app-bg-end) 100%)' }}>
       <div className="max-w-3xl mx-auto">
         <Card>
           <div className="mb-6">

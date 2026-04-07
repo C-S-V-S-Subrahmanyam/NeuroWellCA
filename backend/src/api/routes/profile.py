@@ -3,7 +3,7 @@ Additional auth routes for profile management
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 from src.models.database import get_db
@@ -20,6 +20,7 @@ class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     age: Optional[int] = None
     guardian_contact: Optional[str] = None
+    guardian_email: Optional[EmailStr] = None
 
 
 class PasswordChange(BaseModel):
@@ -42,6 +43,8 @@ async def update_profile(
             current_user.age = profile_data.age
         if profile_data.guardian_contact is not None:
             current_user.guardian_contact = profile_data.guardian_contact
+        if profile_data.guardian_email is not None:
+            current_user.guardian_email = profile_data.guardian_email
         
         await db.commit()
         await db.refresh(current_user)
@@ -56,7 +59,8 @@ async def update_profile(
                 "email": current_user.email,
                 "full_name": current_user.full_name,
                 "age": current_user.age,
-                "guardian_contact": current_user.guardian_contact
+                "guardian_contact": current_user.guardian_contact,
+                "guardian_email": current_user.guardian_email,
             }
         }
         

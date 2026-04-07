@@ -1,0 +1,86 @@
+# NeuroWellCA Configuration File
+# This file contains non-sensitive configuration (safe to commit to git)
+# Sensitive data (passwords, API keys) should be in .env file
+
+[app]
+name = "NeurowellCA"
+version = "2.0.0"
+debug = false
+
+[api]
+prefix = "/api"
+host = "0.0.0.0"
+port = 8000
+
+[security]
+# These will be overridden by environment variables in production
+# Generate secure keys with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+secret_key = "dev-secret-key-CHANGE-IN-PRODUCTION"
+jwt_secret_key = "dev-jwt-secret-CHANGE-IN-PRODUCTION"
+jwt_algorithm = "HS256"
+access_token_expire_minutes = 60
+refresh_token_expire_days = 7
+
+[database]
+# Default for local development
+url = "postgresql://neurowellca_user:neurowellca_password_2026@localhost:5432/neurowellca_db"
+# Production: Override with DATABASE_URL environment variable
+
+[qdrant]
+url = "http://localhost:6333"
+api_key = ""  # Optional for local development
+collection_name = "neurowellca_conversations"
+embedding_dim = 384  # sentence-transformers/all-MiniLM-L6-v2
+
+[ollama]
+api_url = "http://localhost:11434"
+model = "llama3.2:3b"
+timeout = 120
+
+[lstm]
+model_path = "src/ml_models/lstm_chat_summarizer.pth"
+vocab_path = "src/ml_models/lstm_vocab.json"
+max_length = 512
+hidden_size = 256
+num_layers = 2
+
+[cors]
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:8000", 
+    "https://localhost:3000",
+    "https://localhost:3001"
+]
+
+[whatsapp]
+# Twilio WhatsApp Business API
+# Get credentials at: https://console.twilio.com/
+account_sid = ""  # Override with TWILIO_ACCOUNT_SID environment variable
+auth_token = ""  # Override with TWILIO_AUTH_TOKEN environment variable
+from_number = ""  # Override with TWILIO_WHATSAPP_FROM environment variable (format: whatsapp:+14155238886)
+
+[crisis_detection]
+threshold = 2
+guardian_alert_cooldown_hours = 0
+
+[data_retention]
+conversation_days = 30
+crisis_log_days = 90
+
+[logging]
+level = "INFO"
+format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Environment-specific overrides
+[environment.development]
+debug = true
+log_level = "DEBUG"
+
+[environment.production]
+debug = false
+log_level = "INFO"
+
+[environment.testing]
+debug = true
+database_url = "postgresql://test_user:test_pass@localhost:5432/test_db"

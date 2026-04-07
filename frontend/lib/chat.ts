@@ -1,6 +1,7 @@
 import api from './api';
 
 export interface ChatMessage {
+  id?: number;
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
@@ -9,9 +10,14 @@ export interface ChatMessage {
 export interface ChatResponse {
   response: string;
   session_id: string;
+  user_message_id: number;
+  assistant_message_id: number;
   crisis_detected: boolean;
   crisis_message?: string;
   crisis_resources?: any[];
+  guardian_alert_sent?: boolean;
+  guardian_alert_reason?: string;
+  guardian_alert_provider?: string;
 }
 
 export interface SessionMessage {
@@ -51,5 +57,12 @@ export const chatService = {
 
   async deleteSession(sessionId: string): Promise<void> {
     await api.delete(`/api/chat/session/${sessionId}`);
+  },
+
+  async renameSession(sessionId: string, title: string): Promise<{ message: string; title: string }> {
+    const response = await api.patch(`/api/chat/session/${sessionId}/rename`, {
+      title: title.trim().slice(0, 80),
+    });
+    return response.data;
   },
 };

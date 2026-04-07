@@ -7,22 +7,31 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     postgresql-client \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements first for better caching
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy application
+# Copy application code
 COPY . .
 
-# Create directories for ML models
-RUN mkdir -p src/ml_models
+# Create necessary directories
+RUN mkdir -p src/ml_models certs
+
+# Download sentence transformer model at build time (optional for faster startup)
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')" || true
 
 # Expose port
 EXPOSE 8000
 
-# Run application
-CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run application with proper signal handling
+CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

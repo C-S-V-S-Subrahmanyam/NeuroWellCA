@@ -12,6 +12,7 @@ import logging
 from src.models.database import get_db
 from src.models.models import User, Assessment, Conversation, CrisisLog
 from src.api.routes.auth import get_current_user
+from src.api.dependencies import require_permission
 
 logger = logging.getLogger(__name__)
 

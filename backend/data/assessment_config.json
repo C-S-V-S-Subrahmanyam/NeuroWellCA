@@ -1,0 +1,228 @@
+{
+  "assessment_questionnaires": {
+    "phq9": {
+      "name": "Patient Health Questionnaire-9 (PHQ-9)",
+      "description": "Screens for depression severity",
+      "questions": [
+        {
+          "id": 1,
+          "text": "Little interest or pleasure in doing things",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 2,
+          "text": "Feeling down, depressed, or hopeless",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 3,
+          "text": "Trouble falling or staying asleep, or sleeping too much",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 4,
+          "text": "Feeling tired or having little energy",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 5,
+          "text": "Poor appetite or overeating",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 6,
+          "text": "Feeling bad about yourself or that you are a failure",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 7,
+          "text": "Trouble concentrating on things",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 8,
+          "text": "Moving or speaking slowly, or being fidgety or restless",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 9,
+          "text": "Thoughts that you would be better off dead or of hurting yourself",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ],
+          "crisis_trigger": true
+        }
+      ],
+      "scoring": {
+        "min": 0,
+        "max": 27,
+        "interpretation": [
+          { "range": [0, 4], "level": "None-minimal", "color": "green" },
+          { "range": [5, 9], "level": "Mild", "color": "yellow" },
+          { "range": [10, 14], "level": "Moderate", "color": "orange" },
+          { "range": [15, 19], "level": "Moderately severe", "color": "red" },
+          { "range": [20, 27], "level": "Severe", "color": "darkred" }
+        ]
+      }
+    },
+    "gad7": {
+      "name": "Generalized Anxiety Disorder-7 (GAD-7)",
+      "description": "Screens for anxiety severity",
+      "questions": [
+        {
+          "id": 1,
+          "text": "Feeling nervous, anxious, or on edge",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 2,
+          "text": "Not being able to stop or control worrying",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 3,
+          "text": "Worrying too much about different things",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 4,
+          "text": "Trouble relaxing",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 5,
+          "text": "Being so restless that it is hard to sit still",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 6,
+          "text": "Becoming easily annoyed or irritable",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        },
+        {
+          "id": 7,
+          "text": "Feeling afraid as if something awful might happen",
+          "scale": [
+            { "value": 0, "label": "Not at all" },
+            { "value": 1, "label": "Several days" },
+            { "value": 2, "label": "More than half the days" },
+            { "value": 3, "label": "Nearly every day" }
+          ]
+        }
+      ],
+      "scoring": {
+        "min": 0,
+        "max": 21,
+        "interpretation": [
+          { "range": [0, 4], "level": "Minimal", "color": "green" },
+          { "range": [5, 9], "level": "Mild", "color": "yellow" },
+          { "range": [10, 14], "level": "Moderate", "color": "orange" },
+          { "range": [15, 21], "level": "Severe", "color": "red" }
+        ]
+      }
+    }
+  },
+  "example_user_profiles": [
+    {
+      "id": "user_001",
+      "scenario": "High academic stress, mild anxiety",
+      "phq9_score": 8,
+      "gad7_score": 12,
+      "stress_score": 35,
+      "risk_level": "Moderate",
+      "personality": "Introverted, perfectionist",
+      "recommended_interventions": [
+        "Breathing exercises",
+        "Time management tips",
+        "Study-life balance coaching"
+      ]
+    },
+    {
+      "id": "user_002",
+      "scenario": "Moderate depression, loneliness",
+      "phq9_score": 15,
+      "gad7_score": 7,
+      "stress_score": 28,
+      "risk_level": "High",
+      "personality": "Extroverted, socially isolated",
+      "recommended_interventions": [
+        "Professional counseling referral",
+        "Social connection activities",
+        "Daily mood tracking"
+      ]
+    }
+  ]
+}

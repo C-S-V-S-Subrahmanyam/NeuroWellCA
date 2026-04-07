@@ -7,6 +7,7 @@ export interface User {
   full_name?: string;
   age?: number;
   guardian_contact?: string;
+  guardian_email?: string;
   email_verified?: boolean;
   has_completed_initial_assessment: boolean;
   created_at: string;
@@ -17,9 +18,36 @@ export interface LoginResponse {
   refresh_token: string;
   token_type: string;
   requires_assessment: boolean;
+  requires_email_verification?: boolean;
+}
+
+export interface SignupOtpStartResponse {
+  message: string;
+  email: string;
+  otp_expires_minutes: number;
 }
 
 export const authService = {
+  async requestSignupOtp(data: {
+    username: string;
+    email: string;
+    password: string;
+    full_name?: string;
+    age?: number;
+    guardian_contact?: string;
+    guardian_email?: string;
+  }): Promise<SignupOtpStartResponse> {
+    console.log('📤 Sending OTP signup request:', { ...data, password: '***' });
+    const response = await api.post('/api/auth/register', data);
+    console.log('✅ OTP sent:', response.data);
+    return response.data;
+  },
+
+  async verifySignupOtp(email: string, otp: string): Promise<User> {
+    const response = await api.post('/api/auth/verify-signup-otp', { email, otp });
+    return response.data;
+  },
+
   async register(data: {
     username: string;
     email: string;
@@ -27,23 +55,9 @@ export const authService = {
     full_name?: string;
     age?: number;
     guardian_contact?: string;
-  }): Promise<{ message: string; email: string }> {
-    const response = await api.post('/api/auth/register', data);
-    return response.data;
-  },
-
-  async verifyOTP(email: string, otp: string): Promise<User> {
-    const response = await api.post('/api/auth/verify-otp', { email, otp });
-    const user = response.data;
-    
-    // Auto-login after successful verification
-    // Note: The backend should return tokens or we need to login separately
-    // For now, we'll login after verification
-    return user;
-  },
-
-  async resendOTP(email: string): Promise<void> {
-    await api.post('/api/auth/resend-otp', { email });
+    guardian_email?: string;
+  }): Promise<SignupOtpStartResponse> {
+    return this.requestSignupOtp(data);
   },
 
   async login(username: string, password: string): Promise<LoginResponse> {

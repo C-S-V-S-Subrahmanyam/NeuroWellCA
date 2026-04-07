@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
+// Debug: Log the API URL being used
+console.log('🔧 API Configuration:', {
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  API_URL: API_URL,
+  mode: process.env.NODE_ENV
+});
 
 const api = axios.create({
   baseURL: API_URL,
@@ -25,6 +32,11 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Network/CORS/backend-down: keep auth state and surface error to UI.
+    if (!error.response) {
+      return Promise.reject(error);
+    }
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -45,6 +57,10 @@ api.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${access_token}`;
             return api(originalRequest);
           } catch (refreshError) {
+            // Only clear session when refresh actually returns auth failure.
+            if (!(refreshError as any)?.response) {
+              return Promise.reject(error);
+            }
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('user');

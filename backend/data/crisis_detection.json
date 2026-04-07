@@ -1,0 +1,127 @@
+{
+  "crisis_keywords": {
+    "high_severity": [
+      "suicide",
+      "kill myself",
+      "kill my self",
+      "killing myself",
+      "killing",
+      "end my life",
+      "end it all",
+      "want to die",
+      "wanna die",
+      "no reason to live",
+      "better off dead",
+      "self harm",
+      "self-harm",
+      "cut myself",
+      "hurt myself",
+      "overdose",
+      "jump off",
+      "hang myself",
+      "want to kill",
+      "feeling to kill",
+      "feel like killing",
+      "feeling like killing",
+      "thinking of killing",
+      "think of killing",
+      "plan to kill",
+      "going to kill",
+      "gonna kill myself",
+      "gonna kill my self",
+      "commit suicide",
+      "take my life",
+      "don't want to live",
+      "can't live anymore",
+      "want to end",
+      "ending it",
+      "not worth living",
+      "life is over",
+      "won't be here",
+      "say goodbye",
+      "final message",
+      "last time",
+      "can't do this",
+      "i want out"
+    ],
+    "medium_severity": [
+      "depressed",
+      "worthless",
+      "hopeless",
+      "give up",
+      "can't go on",
+      "no point",
+      "nobody cares",
+      "hate myself",
+      "want to disappear",
+      "life is meaningless",
+      "exhausted",
+      "tired of living",
+      "can't take it",
+      "don't want to do this",
+      "everything to stop",
+      "wish i could disappear",
+      "nothing matters",
+      "no way out",
+      "trapped",
+      "burden",
+      "everyone better without me",
+      "world without me",
+      "can't breathe",
+      "drowning"
+    ],
+    "low_severity": [
+      "stressed",
+      "anxious",
+      "worried",
+      "scared",
+      "nervous",
+      "overwhelmed",
+      "can't sleep",
+      "panic",
+      "fear",
+      "sad",
+      "lonely",
+      "isolated"
+    ]
+  },
+  "emergency_contacts": {
+    "india": {
+      "national_helpline": "1800-599-0019",
+      "aasra": "9152987821",
+      "vandrevala": "1860-266-2345",
+      "sneha": "044-24640050",
+      "cooj": "0832-2252525"
+    },
+    "international": {
+      "us": "988",
+      "uk": "116 123",
+      "australia": "131114"
+    }
+  },
+  "crisis_response_templates": {
+    "high": {
+      "message": "I'm really concerned about you. What you're feeling is serious, and you deserve immediate support. Please reach out to a crisis helpline right now.",
+      "actions": [
+        "show_emergency_contacts",
+        "notify_guardian",
+        "log_crisis_event"
+      ]
+    },
+    "medium": {
+      "message": "I hear you, and I want you to know that these feelings are valid. Let's work through this together. Would you like to talk about what's troubling you?",
+      "actions": [
+        "offer_coping_strategies",
+        "recommend_professional_help",
+        "log_support_event"
+      ]
+    },
+    "low": {
+      "message": "It sounds like you're going through a tough time. I'm here to listen and support you. What's been on your mind lately?",
+      "actions": [
+        "active_listening",
+        "suggest_relaxation_exercises"
+      ]
+    }
+  }
+}
