@@ -10,7 +10,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [resolvedAppearance, setResolvedAppearance] = useState<'light' | 'dark'>('light');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   
   const activeMenu = pathname?.includes('/chat')
@@ -54,22 +53,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router, pathname]);
 
   useEffect(() => {
-    const syncAppearance = () => {
-      if (typeof document === 'undefined') return;
-      const current = document.documentElement.dataset.resolvedAppearance;
-      setResolvedAppearance(current === 'dark' ? 'dark' : 'light');
-    };
-
-    syncAppearance();
-    window.addEventListener('neurowell-theme-change', syncAppearance);
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncAppearance);
-    return () => {
-      window.removeEventListener('neurowell-theme-change', syncAppearance);
-      window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', syncAppearance);
-    };
-  }, []);
-
-  useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest('[data-user-menu]')) {
@@ -81,16 +64,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
-  const isDark = resolvedAppearance === 'dark';
   const activeGradient = `linear-gradient(135deg, var(--accent-700), var(--accent-600))`;
   const activeGradientHover = `linear-gradient(135deg, var(--accent-700), var(--accent-600))`;
-  const hoverBg = isDark ? 'rgba(30, 41, 59, 0.9)' : '#f3f4f6';
-  const inactiveText = isDark ? '#cbd5e1' : '#4b5563';
-  const cardBg = isDark ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.92)';
+  const hoverBg = 'var(--surface-2)';
+  const inactiveText = 'var(--text-secondary)';
+  const cardBg = 'var(--surface-1)';
   const headerText = 'var(--text-primary)';
-  const logoutBg = isDark ? 'rgba(15, 23, 42, 0.92)' : 'white';
-  const logoutHoverBg = isDark ? 'rgba(30, 41, 59, 0.98)' : '#fef2f2';
-  const logoutBorder = isDark ? 'rgba(248, 113, 113, 0.35)' : '#fee2e2';
+  const logoutHoverBg = 'color-mix(in srgb, #ef4444 12%, var(--surface-1))';
 
   const handleLogout = () => {
     authService.logout();
@@ -245,7 +225,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </button>
               )}
               {userMenuOpen && (
-                <div style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0, minWidth: '180px', background: cardBg, border: `1px solid var(--surface-border)`, borderRadius: '0.9rem', boxShadow: '0 20px 35px rgba(0,0,0,0.15)', overflow: 'hidden', zIndex: 60 }}>
+                <div style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0, minWidth: '180px', background: 'var(--surface-1)', border: `1px solid var(--surface-border)`, borderRadius: '0.9rem', boxShadow: '0 20px 35px rgba(0,0,0,0.15)', overflow: 'hidden', zIndex: 60 }}>
                   <button
                     type="button"
                     onClick={() => {
