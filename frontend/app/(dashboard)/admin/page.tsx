@@ -392,10 +392,10 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
             Admin Dashboard
           </h1>
-          <p className="text-gray-600">System overview and user management</p>
+          <p style={{ color: 'var(--text-secondary)' }}>System overview and user management</p>
         </div>
 
         {/* Error Alert */}
@@ -456,31 +456,58 @@ export default function AdminDashboard() {
         <div className="mb-6 flex gap-4">
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-6 py-3 font-semibold rounded-xl transition ${
-              activeTab === 'users'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-600 text-white shadow-lg'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+            className="px-6 py-3 font-semibold rounded-xl transition border"
+            style={activeTab === 'users'
+              ? {
+                  background: 'var(--surface-1)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--accent-500)',
+                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)',
+                }
+              : {
+                  background: 'var(--surface-1)',
+                  color: 'var(--text-secondary)',
+                  borderColor: 'var(--surface-border)',
+                }
+            }
           >
             👥 Users
           </button>
           <button
             onClick={() => setActiveTab('feedback')}
-            className={`px-6 py-3 font-semibold rounded-xl transition ${
-              activeTab === 'feedback'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-600 text-white shadow-lg'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+            className="px-6 py-3 font-semibold rounded-xl transition border"
+            style={activeTab === 'feedback'
+              ? {
+                  background: 'var(--surface-1)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--accent-500)',
+                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)',
+                }
+              : {
+                  background: 'var(--surface-1)',
+                  color: 'var(--text-secondary)',
+                  borderColor: 'var(--surface-border)',
+                }
+            }
           >
             💬 Feedback ({feedbacks.length})
           </button>
           <button
             onClick={() => setActiveTab('llm')}
-            className={`px-6 py-3 font-semibold rounded-xl transition ${
-              activeTab === 'llm'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-600 text-white shadow-lg'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+            className="px-6 py-3 font-semibold rounded-xl transition border"
+            style={activeTab === 'llm'
+              ? {
+                  background: 'var(--surface-1)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--accent-500)',
+                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.10)',
+                }
+              : {
+                  background: 'var(--surface-1)',
+                  color: 'var(--text-secondary)',
+                  borderColor: 'var(--surface-border)',
+                }
+            }
           >
             🤖 LLM Providers
           </button>
@@ -490,8 +517,8 @@ export default function AdminDashboard() {
         {activeTab === 'users' && (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">Users</h2>
-            <p className="text-sm text-gray-600 mt-1">Manage registered users</p>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Users</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Manage registered users</p>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -598,8 +625,8 @@ export default function AdminDashboard() {
         {activeTab === 'feedback' && (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">User Feedback</h2>
-            <p className="text-sm text-gray-600 mt-1">All feedback submitted by users</p>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>User Feedback</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>All feedback submitted by users</p>
           </div>
 
           <div className="overflow-x-auto">
@@ -721,8 +748,8 @@ export default function AdminDashboard() {
         {activeTab === 'llm' && (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">Global LLM Control</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Global LLM Control</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
               Add providers first, then explicitly choose one to use globally for all users.
             </p>
             <div className="mt-3 p-3 rounded-lg border border-blue-100 bg-blue-50 text-sm text-blue-900">
