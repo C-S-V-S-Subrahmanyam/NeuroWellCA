@@ -10,6 +10,7 @@ export interface User {
   guardian_email?: string;
   email_verified?: boolean;
   has_completed_initial_assessment: boolean;
+  is_admin?: boolean;
   created_at: string;
 }
 

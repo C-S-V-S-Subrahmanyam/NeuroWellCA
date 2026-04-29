@@ -4,7 +4,7 @@ Authentication routes for FastAPI
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_, func
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
@@ -91,6 +91,7 @@ class UserResponse(BaseModel):
     guardian_contact: Optional[str]
     guardian_email: Optional[EmailStr]
     has_completed_initial_assessment: bool
+    is_admin: bool = False
     created_at: datetime
     
     class Config:
@@ -389,8 +390,16 @@ async def verify_signup_otp(payload: SignupOTPVerifyRequest, db: AsyncSession = 
 async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
     """User login"""
     try:
+        login_identifier = user_data.username.strip()
         # Find user
-        result = await db.execute(select(User).where(User.username == user_data.username))
+        result = await db.execute(
+            select(User).where(
+                or_(
+                    func.lower(User.username) == login_identifier.lower(),
+                    func.lower(User.email) == login_identifier.lower(),
+                )
+            )
+        )
         user = result.scalar_one_or_none()
         
         if not user or not verify_password(user_data.password, user.password_hash):
@@ -445,9 +454,31 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_me(current_user: User = Depends(get_current_user)):
+async def get_me(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Get current user information"""
-    return current_user
+    # Compute is_admin flag by explicitly querying assigned roles.
+    is_admin = False
+    try:
+        roles = await PermissionService.get_user_roles(db, current_user.id)
+        for role in roles:
+            if str(role.get("code", "")).lower() in {"admin", "super_admin", "superuser"}:
+                is_admin = True
+                break
+    except Exception:
+        is_admin = False
+
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "age": current_user.age,
+        "guardian_contact": current_user.guardian_contact,
+        "guardian_email": current_user.guardian_email,
+        "has_completed_initial_assessment": current_user.has_completed_initial_assessment,
+        "created_at": current_user.created_at,
+        "is_admin": is_admin,
+    }
 
 
 class ProfileUpdate(BaseModel):

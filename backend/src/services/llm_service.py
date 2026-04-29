@@ -44,18 +44,31 @@ class LLMService:
         }
 
     @staticmethod
-    def _context_prompt(prompt: str, context: Optional[list[str]]) -> str:
-        if not context:
-            return prompt
-        context_text = "\n".join(context[-10:])
-        return f"Previous conversation:\n{context_text}\n\nUser: {prompt}\n\nAssistant:"
+    def _context_prompt(
+        prompt: str,
+        context: Optional[list[str]],
+        mood_context: Optional[str] = None,
+    ) -> str:
+        prompt_parts: list[str] = []
+
+        if mood_context:
+            prompt_parts.append(mood_context.strip())
+
+        if context:
+            # Smaller context window improves latency while preserving recent turns.
+            context_text = "\n".join(context[-6:])
+            prompt_parts.append(f"Previous conversation:\n{context_text}")
+
+        prompt_parts.append(f"User: {prompt}")
+        prompt_parts.append("Assistant:")
+        return "\n\n".join(prompt_parts) if len(prompt_parts) > 1 else prompt
 
     async def _call_ollama(self, prompt: str, model: str, base_url: str) -> str:
         payload = {
             "model": model,
             "prompt": prompt,
             "stream": False,
-            "options": {"temperature": 0.7, "top_p": 0.9, "num_predict": 512},
+            "options": {"temperature": 0.7, "top_p": 0.9, "num_predict": 220},
         }
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(f"{base_url.rstrip('/')}/api/generate", json=payload)
@@ -75,7 +88,7 @@ class LLMService:
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.7,
             "top_p": 0.9,
-            "max_tokens": 512,
+            "max_tokens": 220,
         }
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -99,7 +112,7 @@ class LLMService:
         endpoint = f"{base_url.rstrip('/')}/models/{model}:generateContent"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.7, "topP": 0.9, "maxOutputTokens": 512},
+            "generationConfig": {"temperature": 0.7, "topP": 0.9, "maxOutputTokens": 220},
         }
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
@@ -119,9 +132,15 @@ class LLMService:
             return "I'm here to support you."
         return parts[0].get("text", "I'm here to support you.")
 
-    async def generate_response(self, db: AsyncSession, prompt: str, context: Optional[list[str]] = None) -> str:
+    async def generate_response(
+        self,
+        db: AsyncSession,
+        prompt: str,
+        context: Optional[list[str]] = None,
+        mood_context: Optional[str] = None,
+    ) -> str:
         """Generate response using active provider; fallback to configured Ollama."""
-        full_prompt = self._context_prompt(prompt, context)
+        full_prompt = self._context_prompt(prompt, context, mood_context)
         provider = await self._get_active_provider(db)
 
         if provider is None:
