@@ -1,6 +1,8 @@
 """
 Chat routes with Ollama AI and Qdrant vector storage
 """
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +25,7 @@ from src.services.qdrant_service import qdrant_service
 from src.services.crisis_service import crisis_service
 from src.services.guardian_alert_service import guardian_alert_service
 from src.services.llm_service import llm_service
+from src.services.permission_service import PermissionService
 from src.ml_models.lstm_summarizer import chat_title_generator
 from src.utils.config import settings
 
@@ -57,10 +60,97 @@ def _should_alert_guardian(crisis_result: dict, message_text: str) -> bool:
     return _contains_unsafe_text(message_text)
 
 
+def _build_mood_context(message_data: ChatMessage) -> Optional[str]:
+    mood = (message_data.mood or "").strip()
+    mood_note = (message_data.mood_note or "").strip()
+
+    if not mood and not mood_note:
+        return None
+
+    parts = []
+    if mood:
+        parts.append(f"Daily mood check: {mood}.")
+    if mood_note:
+        parts.append(f"User note: {mood_note}.")
+    parts.append(
+        "Use this mood check to personalize the reply with an empathetic tone, practical guidance, and a short wellness nudge if helpful."
+    )
+    return " ".join(parts)
+
+
+def _suggest_game(mood: Optional[str], sentiment: float, crisis_detected: bool) -> Optional[SuggestedGame]:
+    if crisis_detected:
+        return None
+
+    normalized_mood = (mood or "").strip().lower().replace("_", " ")
+    high_energy = {"happy", "calm", "motivated", "energized", "okay", "neutral", "fine"}
+    frustrated = {"angry", "frustrated", "irritated", "mad", "annoyed"}
+
+    if normalized_mood in {"anxious", "worried", "stressed", "overwhelmed", "panic"} or sentiment <= -0.4:
+        return SuggestedGame(
+            title="Breathe & Balance",
+            href="/games/breathe-balance",
+            emoji="🌬️",
+            reason="A short breathing reset can help settle the nervous system before the next conversation.",
+        )
+
+    if normalized_mood in {"sad", "down", "low", "lonely"} or sentiment <= -0.15:
+        return SuggestedGame(
+            title="Gratitude Garden",
+            href="/games/gratitude-garden",
+            emoji="🌷",
+            reason="A gentle gratitude activity can shift attention toward small positive details.",
+        )
+
+    if normalized_mood in frustrated or sentiment < 0:
+        return SuggestedGame(
+            title="Breathing Rhythm",
+            href="/games/breathing-rhythm",
+            emoji="🎵",
+            reason="A paced rhythm game can help release tension and regulate breathing.",
+        )
+
+    if normalized_mood in high_energy or sentiment >= 0.35:
+        return SuggestedGame(
+            title="Emoji Catcher",
+            href="/games/emoji-catcher",
+            emoji="😊",
+            reason="A quick, playful round can keep the mood light while staying engaged.",
+        )
+
+    return SuggestedGame(
+        title="Bubble Pop Bliss",
+        href="/games/bubble-pop-bliss",
+        emoji="🫧",
+        reason="A calm, low-pressure game is a good reset between messages.",
+    )
+
+
+async def _user_is_admin(db: AsyncSession, user_id: int) -> bool:
+    """Return True if user has an admin-like role assigned."""
+    try:
+        roles = await PermissionService.get_user_roles(db, user_id)
+        for role in roles:
+            if str(role.get("code", "")).lower() in {"admin", "super_admin", "superuser"}:
+                return True
+    except Exception:
+        return False
+    return False
+
+
 # Pydantic models
 class ChatMessage(BaseModel):
     message: str
     session_id: Optional[str] = None
+    mood: Optional[str] = None
+    mood_note: Optional[str] = None
+
+
+class SuggestedGame(BaseModel):
+    title: str
+    href: str
+    emoji: str
+    reason: str
 
 
 class ChatResponse(BaseModel):
@@ -74,6 +164,7 @@ class ChatResponse(BaseModel):
     guardian_alert_sent: bool = False
     guardian_alert_reason: Optional[str] = None
     guardian_alert_provider: Optional[str] = None
+    suggested_game: Optional[SuggestedGame] = None
 
 
 class SessionMessage(BaseModel):
@@ -196,6 +287,10 @@ async def send_message_stream(
             
             # Send session_id first
             yield f"event: session\ndata: {json.dumps({'session_id': session_id})}\n\n"
+            # Enforce daily mood for non-admin users
+            if not await _user_is_admin(db, current_user.id) and not (message_data.mood and message_data.mood.strip()):
+                yield f"event: error\ndata: {json.dumps({'error': 'daily_mood_required', 'message': 'Daily mood check required before chatting.'})}\n\n"
+                return
             
             # Check for crisis
             crisis_result = crisis_service.detect_crisis(message_data.message)
@@ -216,8 +311,9 @@ async def send_message_stream(
                 logger.warning("Guardian alert result (stream) for user %s: %s", current_user.id, alert_result)
             
             # Get conversation context
-            context_messages = await qdrant_service.get_session_context(session_id, limit=10)
+            context_messages = await qdrant_service.get_session_context(session_id, limit=6)
             context = [f"{msg['sender']}: {msg['message_text']}" for msg in context_messages]
+            mood_context = _build_mood_context(message_data)
             
             # Save user message
             user_conversation = Conversation(
@@ -260,11 +356,15 @@ async def send_message_stream(
             else:
                 # Stream AI response from active provider (non-stream fallback for compatibility)
                 ai_response = ""
-                provider_response = await llm_service.generate_response(db=db, prompt=message_data.message, context=context)
+                provider_response = await llm_service.generate_response(
+                    db=db,
+                    prompt=message_data.message,
+                    context=context,
+                    mood_context=mood_context,
+                )
                 async for chunk in _chunk_text(provider_response):
                     ai_response += chunk
                     yield f"event: chunk\ndata: {json.dumps({'chunk': chunk})}\n\n"
-                    await asyncio.sleep(0.01)  # Small delay for smooth streaming
             
             # Save AI response
             ai_conversation = Conversation(
@@ -307,11 +407,14 @@ async def send_message_stream(
             else:
                 chat_session.message_count += 2
                 chat_session.last_message_at = datetime.utcnow()
+
+            mood_sentiment = float((crisis_result.get("sentiment") or {}).get("compound", 0.0))
+            suggested_game = _suggest_game(message_data.mood, mood_sentiment, crisis_detected)
             
             await db.commit()
             
             # Send completion event
-            yield f"event: done\ndata: {json.dumps({'message': 'Stream complete'})}\n\n"
+            yield f"event: done\ndata: {json.dumps({'message': 'Stream complete', 'suggested_game': suggested_game.model_dump() if suggested_game else None})}\n\n"
             
             logger.info(f"✅ Streaming message processed for user {current_user.username}, session {session_id}")
             
@@ -339,6 +442,12 @@ async def send_message(
 ):
     """Send message and get AI response"""
     try:
+        # Enforce daily mood check for non-admin users
+        if not await _user_is_admin(db, current_user.id) and not (message_data.mood and message_data.mood.strip()):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="daily_mood_required"
+            )
         # Generate or use existing session ID
         session_id = message_data.session_id or str(uuid.uuid4())
         
@@ -360,8 +469,9 @@ async def send_message(
             logger.warning("Guardian alert result for user %s: %s", current_user.id, alert_result)
         
         # Get conversation context from Qdrant
-        context_messages = await qdrant_service.get_session_context(session_id, limit=10)
+        context_messages = await qdrant_service.get_session_context(session_id, limit=6)
         context = [f"{msg['sender']}: {msg['message_text']}" for msg in context_messages]
+        mood_context = _build_mood_context(message_data)
         
         # Save user message
         user_conversation = Conversation(
@@ -387,7 +497,12 @@ async def send_message(
         user_conversation.vector_id = vector_id
         
         # Get AI response from active provider
-        ai_response = await llm_service.generate_response(db=db, prompt=message_data.message, context=context)
+        ai_response = await llm_service.generate_response(
+            db=db,
+            prompt=message_data.message,
+            context=context,
+            mood_context=mood_context,
+        )
         
         # If crisis detected, override with crisis response
         crisis_message = None
@@ -453,6 +568,9 @@ async def send_message(
             chat_session.last_message_at = datetime.utcnow()
         
         await db.commit()
+
+        mood_sentiment = float((crisis_result.get("sentiment") or {}).get("compound", 0.0))
+        suggested_game = _suggest_game(message_data.mood, mood_sentiment, crisis_detected)
         
         # Prepare response
         response_data = ChatResponse(
@@ -464,6 +582,7 @@ async def send_message(
             guardian_alert_sent=bool(alert_result.get("sent", False)),
             guardian_alert_reason=alert_result.get("reason"),
             guardian_alert_provider=alert_result.get("provider"),
+            suggested_game=suggested_game,
         )
         
         if crisis_detected:

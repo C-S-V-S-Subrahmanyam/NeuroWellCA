@@ -5,6 +5,19 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  gameSuggestion?: SuggestedGame;
+}
+
+export interface SuggestedGame {
+  title: string;
+  href: string;
+  emoji: string;
+  reason: string;
+}
+
+export interface DailyMoodPayload {
+  mood: string;
+  mood_note?: string;
 }
 
 export interface ChatResponse {
@@ -18,6 +31,7 @@ export interface ChatResponse {
   guardian_alert_sent?: boolean;
   guardian_alert_reason?: string;
   guardian_alert_provider?: string;
+  suggested_game?: SuggestedGame | null;
 }
 
 export interface SessionMessage {
@@ -37,10 +51,12 @@ export interface ChatSessionInfo {
 }
 
 export const chatService = {
-  async sendMessage(message: string, sessionId?: string): Promise<ChatResponse> {
+  async sendMessage(message: string, sessionId?: string, mood?: DailyMoodPayload): Promise<ChatResponse> {
     const response = await api.post('/api/chat/message', {
       message,
       session_id: sessionId,
+      mood: mood?.mood,
+      mood_note: mood?.mood_note,
     });
     return response.data;
   },

@@ -2,15 +2,74 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { authService } from '@/lib/auth';
-import { chatService, ChatMessage, ChatSessionInfo } from '@/lib/chat';
+import { chatService, ChatMessage, ChatSessionInfo, DailyMoodPayload, SuggestedGame } from '@/lib/chat';
 import { feedbackService } from '@/lib/feedback';
 import SendIconNew from '@/components/icons/SendIconNew';
 import TypewriterMessage from '@/components/TypewriterMessage';
 
+const MOOD_OPTIONS = [
+  { value: 'calm', emoji: '🌿', label: 'Calm' },
+  { value: 'stressed', emoji: '🌪️', label: 'Stressed' },
+  { value: 'sad', emoji: '💙', label: 'Sad' },
+  { value: 'anxious', emoji: '🌬️', label: 'Anxious' },
+  { value: 'tired', emoji: '🫶', label: 'Tired' },
+  { value: 'motivated', emoji: '✨', label: 'Motivated' },
+];
+
+const VALID_GAME_ROUTES = new Set([
+  '/games/breathe-balance',
+  '/games/breathing-rhythm',
+  '/games/bubble-pop-bliss',
+  '/games/emoji-catcher',
+  '/games/exercises',
+  '/games/focus-flow',
+  '/games/gratitude-garden',
+  '/games/media-library',
+  '/games/zen-match',
+]);
+
+const MOOD_STORAGE_KEY_PREFIX = 'neurowell_daily_mood';
+
+type StoredMood = DailyMoodPayload & { savedAt: number };
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+const loadStoredMood = (storageKey: string): StoredMood | null => {
+  if (typeof window === 'undefined') return null;
+
+  const raw = window.localStorage.getItem(storageKey);
+  if (!raw) return null;
+
+  try {
+    const parsed: any = JSON.parse(raw);
+    const savedAt = parsed?.savedAt ? Number(parsed.savedAt) : null;
+    const now = Date.now();
+
+    if (!savedAt || now - savedAt >= ONE_DAY_MS) {
+      // expired
+      window.localStorage.removeItem(storageKey);
+      return null;
+    }
+
+    return {
+      mood: parsed.mood,
+      mood_note: parsed.mood_note,
+      savedAt,
+    } as StoredMood;
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return null;
+  }
+};
+
 export default function ChatPage() {
   const router = useRouter();
+  const currentUser = authService.getUser();
+  const isAdmin = currentUser?.is_admin === true;
+  const getMoodStorageKey = () => `${MOOD_STORAGE_KEY_PREFIX}_${authService.getUser()?.id ?? 'unknown'}`;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessions, setSessions] = useState<ChatSessionInfo[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -25,7 +84,11 @@ export default function ChatPage() {
   const [feedbackByMessageId, setFeedbackByMessageId] = useState<Record<number, 'positive' | 'negative'>>({});
   const [activeSessionMenu, setActiveSessionMenu] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [dailyMood, setDailyMood] = useState<DailyMoodPayload | null>(null);
+  const [moodNote, setMoodNote] = useState('');
+  const [showMoodCard, setShowMoodCard] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const moodExpiryTimerRef = useRef<number | null>(null);
 
   const userMessageStyle = {
     background: 'linear-gradient(135deg, var(--accent-600), var(--accent-700))',
@@ -46,6 +109,35 @@ export default function ChatPage() {
   }, [router]);
 
   useEffect(() => {
+    const moodStorageKey = getMoodStorageKey();
+    const storedMood = loadStoredMood(moodStorageKey);
+    if (storedMood) {
+      const { savedAt, ...mood } = storedMood;
+      setDailyMood(mood);
+      setMoodNote(mood.mood_note || '');
+      // If the user already saved a mood for today, hide the mood card by default
+      setShowMoodCard(false);
+
+      const expiresIn = Math.max(0, ONE_DAY_MS - (Date.now() - savedAt));
+      if (moodExpiryTimerRef.current) {
+        window.clearTimeout(moodExpiryTimerRef.current);
+      }
+      moodExpiryTimerRef.current = window.setTimeout(() => {
+        setDailyMood(null);
+        setMoodNote('');
+        setShowMoodCard(true);
+      }, expiresIn);
+    }
+
+    return () => {
+      if (moodExpiryTimerRef.current) {
+        window.clearTimeout(moodExpiryTimerRef.current);
+        moodExpiryTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (currentSessionId) {
       loadMessages(currentSessionId);
     }
@@ -57,6 +149,52 @@ export default function ChatPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const saveDailyMood = (nextMood?: DailyMoodPayload) => {
+    const payload = nextMood || dailyMood;
+    if (!payload?.mood?.trim()) {
+      return;
+    }
+
+    const normalizedPayload: DailyMoodPayload = {
+      mood: payload.mood.trim(),
+      mood_note: (payload.mood_note || '').trim() || undefined,
+    };
+    const toStore = { ...normalizedPayload, savedAt: Date.now() };
+    const moodStorageKey = getMoodStorageKey();
+    window.localStorage.setItem(moodStorageKey, JSON.stringify(toStore));
+    setDailyMood(normalizedPayload);
+    setMoodNote(normalizedPayload.mood_note || '');
+    if (moodExpiryTimerRef.current) {
+      window.clearTimeout(moodExpiryTimerRef.current);
+      moodExpiryTimerRef.current = null;
+    }
+    moodExpiryTimerRef.current = window.setTimeout(() => {
+      setDailyMood(null);
+      setMoodNote('');
+      setShowMoodCard(true);
+    }, ONE_DAY_MS);
+    // After saving today's mood, hide the mood card
+    setShowMoodCard(false);
+  };
+
+  const clearDailyMood = () => {
+    const moodStorageKey = getMoodStorageKey();
+    window.localStorage.removeItem(moodStorageKey);
+    setDailyMood(null);
+    setMoodNote('');
+    if (moodExpiryTimerRef.current) {
+      window.clearTimeout(moodExpiryTimerRef.current);
+      moodExpiryTimerRef.current = null;
+    }
+    // Reveal the mood card when the user wants to change their mood
+    setShowMoodCard(true);
+  };
+
+  const handleMoodPick = (mood: string) => {
+    // Set the in-memory selection; user must click Save to persist for the day
+    setDailyMood({ mood, mood_note: moodNote });
   };
 
   const loadSessions = async () => {
@@ -111,7 +249,11 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, tempMessage]);
 
     try {
-      const response = await chatService.sendMessage(userMessage, currentSessionId || undefined);
+      const response = await chatService.sendMessage(
+        userMessage,
+        currentSessionId || undefined,
+        dailyMood || undefined,
+      );
 
       if (response.crisis_detected) {
         setCrisisAlert(response.crisis_message || 'Crisis detected. Please seek immediate help.');
@@ -136,6 +278,7 @@ export default function ChatPage() {
         role: 'assistant',
         content: response.response,
         timestamp: new Date().toISOString(),
+        gameSuggestion: response.suggested_game || undefined,
       };
       setMessages((prev) => [...prev, aiMessage]);
       setLastMessageIndex(messages.length + 1);
@@ -145,7 +288,13 @@ export default function ChatPage() {
         loadSessions();
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to send message');
+      const detail = err.response?.data?.detail;
+      if (detail === 'daily_mood_required') {
+        setError('Please complete the daily mood check before chatting.');
+        setShowMoodCard(true);
+      } else {
+        setError(detail || 'Failed to send message');
+      }
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsSending(false);
@@ -213,6 +362,69 @@ export default function ChatPage() {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to archive chat');
     }
+  };
+
+  const renderGameSuggestion = (suggestion: SuggestedGame) => (
+    <Link
+      href={suggestion.href}
+      className="mt-4 block rounded-2xl border border-cyan-200 bg-cyan-50/80 px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg shadow-sm">
+          {suggestion.emoji}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-cyan-950">
+            Try {suggestion.title}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-cyan-900/80">
+            {suggestion.reason}
+          </p>
+          <p className="mt-2 text-sm font-semibold text-cyan-700">
+            Open game →
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+
+  const fallbackGames: SuggestedGame[] = [
+    {
+      title: 'Breathe & Balance',
+      href: '/games/breathe-balance',
+      emoji: '🌬️',
+      reason: 'A quick breathing reset can help settle your mind.',
+    },
+    {
+      title: 'Breathing Rhythm',
+      href: '/games/breathing-rhythm',
+      emoji: '🎵',
+      reason: 'Follow a gentle rhythm to regulate pace and focus.',
+    },
+    {
+      title: 'Focus Flow',
+      href: '/games/focus-flow',
+      emoji: '🎯',
+      reason: 'A calm focus challenge can help reset attention and energy.',
+    },
+    {
+      title: 'Bubble Pop Bliss',
+      href: '/games/bubble-pop-bliss',
+      emoji: '🫧',
+      reason: 'A calm, low-pressure game is a good reset between messages.',
+    },
+  ];
+
+  const pickFallbackGame = (messageId: number | undefined, index: number): SuggestedGame => {
+    const seed = (messageId ?? 0) + index;
+    return fallbackGames[Math.abs(seed) % fallbackGames.length];
+  };
+
+  const resolveSuggestedGame = (suggestion: SuggestedGame | undefined, messageId: number | undefined, index: number): SuggestedGame => {
+    if (suggestion && VALID_GAME_ROUTES.has(suggestion.href)) {
+      return suggestion;
+    }
+    return pickFallbackGame(messageId, index);
   };
 
   const visibleSessions = sessions.filter((session) => {
@@ -413,6 +625,90 @@ export default function ChatPage() {
           </div>
         )}
 
+        {!isAdmin && showMoodCard && (
+          <div className="px-6 pt-5">
+            <div className="max-w-4xl mx-auto rounded-3xl border border-cyan-200/80 bg-white/85 backdrop-blur-xl p-4 shadow-lg shadow-cyan-100/40">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-600">
+                  Daily mood check
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">
+                  {dailyMood ? `Today you are feeling ${dailyMood.mood}.` : 'How are you feeling today?'}
+                </h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  This helps the assistant tune its tone and pick a calming game after each reply.
+                </p>
+                {dailyMood?.mood_note ? (
+                  <p className="mt-2 text-sm text-cyan-800">
+                    Note: {dailyMood.mood_note}
+                  </p>
+                ) : null}
+              </div>
+              {dailyMood ? (
+                <button
+                  type="button"
+                  onClick={clearDailyMood}
+                  className="self-start rounded-full border border-cyan-200 px-4 py-2 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-50"
+                >
+                  Change mood
+                </button>
+              ) : null}
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              {MOOD_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleMoodPick(option.value)}
+                  className={`rounded-2xl border px-3 py-3 text-left transition ${
+                    dailyMood?.mood === option.value
+                      ? 'border-cyan-500 bg-cyan-100 text-cyan-950 shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-cyan-200 hover:bg-cyan-50'
+                  }`}
+                >
+                  <div className="text-lg">{option.emoji}</div>
+                  <div className="mt-1 text-sm font-semibold">{option.label}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Optional note
+                </span>
+                <textarea
+                  value={moodNote}
+                  onChange={(e) => {
+                    const nextNote = e.target.value;
+                    setMoodNote(nextNote);
+                    setDailyMood((prev) => (prev ? { ...prev, mood_note: nextNote } : prev));
+                  }}
+                  placeholder="What is influencing your mood today?"
+                  rows={2}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                />
+              </label>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => saveDailyMood()}
+                  className="rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={!dailyMood?.mood}
+                >
+                  Save today’s mood
+                </button>
+                <p className="text-xs text-slate-500">
+                  Stored only for today and used to personalize chat replies.
+                </p>
+              </div>
+            </div>
+            </div>
+          </div>
+        )}
+
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto px-6 py-8">
           <div className="max-w-4xl mx-auto">
@@ -480,7 +776,14 @@ export default function ChatPage() {
                             >
                               👎 Not helpful
                             </button>
+                            <Link
+                              href={resolveSuggestedGame(msg.gameSuggestion, msg.id, idx).href}
+                              className="ml-2 px-3 py-1 text-xs rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold transition hover:opacity-95"
+                            >
+                              ▶ Play {resolveSuggestedGame(msg.gameSuggestion, msg.id, idx).title}
+                            </Link>
                           </div>
+                          {renderGameSuggestion(resolveSuggestedGame(msg.gameSuggestion, msg.id, idx))}
                         </>
                       ) : (
                         <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -547,13 +850,15 @@ export default function ChatPage() {
               </div>
               <button
                 type="submit"
-                disabled={isSending || !input.trim()}
+                disabled={
+                  isSending || !input.trim() || (!isAdmin && !dailyMood)
+                }
                 className={`p-4 rounded-2xl transition-all duration-200 shadow-lg ${
-                  isSending || !input.trim()
+                  isSending || !input.trim() || (!isAdmin && !dailyMood)
                     ? 'bg-gray-300 cursor-not-allowed'
                     : 'hover:shadow-xl hover:scale-105 active:scale-95'
                 }`}
-                style={isSending || !input.trim() ? undefined : sendButtonStyle}
+                style={isSending || !input.trim() || (!isAdmin && !dailyMood) ? undefined : sendButtonStyle}
               >
                 {isSending ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
