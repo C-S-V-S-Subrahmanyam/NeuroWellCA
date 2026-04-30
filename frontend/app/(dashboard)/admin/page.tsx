@@ -388,11 +388,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 p-3 sm:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
             Admin Dashboard
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>System overview and user management</p>
@@ -453,10 +453,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex flex-wrap gap-2 sm:gap-4">
           <button
             onClick={() => setActiveTab('users')}
-            className="px-6 py-3 font-semibold rounded-xl transition border"
+            className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl transition border"
             style={activeTab === 'users'
               ? {
                   background: 'var(--surface-1)',
@@ -475,7 +475,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('feedback')}
-            className="px-6 py-3 font-semibold rounded-xl transition border"
+            className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl transition border"
             style={activeTab === 'feedback'
               ? {
                   background: 'var(--surface-1)',
@@ -494,7 +494,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('llm')}
-            className="px-6 py-3 font-semibold rounded-xl transition border"
+            className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl transition border"
             style={activeTab === 'llm'
               ? {
                   background: 'var(--surface-1)',

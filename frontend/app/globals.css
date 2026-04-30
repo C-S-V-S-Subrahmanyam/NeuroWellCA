@@ -32,6 +32,12 @@ body {
   color: var(--text-primary);
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .glass-effect {
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);

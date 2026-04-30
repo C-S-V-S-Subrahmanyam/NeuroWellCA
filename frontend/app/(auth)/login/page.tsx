@@ -45,21 +45,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-sky-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-sky-100 flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md">
         {/* Logo & Title */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <div className="flex justify-center mb-4">
             <Image src="/logo.PNG" alt="NeuroWell Logo" width={70} height={70} priority />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent mb-2">
             Welcome Back
           </h1>
           <p className="text-gray-600">Sign in to continue your wellness journey</p>
         </div>
 
         {/* Login Form */}
-        <div className="glass-effect p-8 rounded-3xl shadow-2xl">
+        <div className="glass-effect p-5 sm:p-8 rounded-3xl shadow-2xl">
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">

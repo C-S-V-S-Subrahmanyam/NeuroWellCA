@@ -104,24 +104,24 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4" style={{ background: 'linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-mid) 50%, var(--app-bg-end) 100%)' }}>
+    <div className="min-h-screen py-6 sm:py-10 px-3 sm:px-4" style={{ background: 'linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-mid) 50%, var(--app-bg-end) 100%)' }}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Mental Health Dashboard</h1>
+        <div className="mb-8 sm:mb-10">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Mental Health Dashboard</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Track your mental well-being journey</p>
         </div>
 
         {stats ? (
           <>
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
               <div className="glass-effect rounded-2xl shadow-xl p-6">
                 <div className="text-center">
                   <div className="inline-block p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mb-3">
                     <span className="text-2xl">📊</span>
                   </div>
                   <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Total Assessments</p>
-                  <p className="text-5xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats.totalAssessments}</p>
+                  <p className="text-4xl sm:text-5xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats.totalAssessments}</p>
                 </div>
               </div>
 
@@ -131,8 +131,8 @@ export default function DashboardPage() {
                     <span className="text-2xl">😔</span>
                   </div>
                   <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Latest PHQ-9 Score</p>
-                  <p className={`text-5xl font-bold ${getSeverityColor(stats.latestPhq9, 'phq9')}`}>
-                    {stats.latestPhq9}<span className="text-2xl" style={{ color: 'var(--text-secondary)' }}>/27</span>
+                  <p className={`text-4xl sm:text-5xl font-bold ${getSeverityColor(stats.latestPhq9, 'phq9')}`}>
+                    {stats.latestPhq9}<span className="text-xl sm:text-2xl" style={{ color: 'var(--text-secondary)' }}>/27</span>
                   </p>
                   <p className="text-sm font-semibold mt-2" style={{ color: 'var(--text-secondary)' }}>
                     {getSeverityLabel(stats.latestPhq9, 'phq9')}
@@ -146,8 +146,8 @@ export default function DashboardPage() {
                     <span className="text-2xl">😰</span>
                   </div>
                   <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Latest GAD-7 Score</p>
-                  <p className={`text-5xl font-bold ${getSeverityColor(stats.latestGad7, 'gad7')}`}>
-                    {stats.latestGad7}<span className="text-2xl" style={{ color: 'var(--text-secondary)' }}>/21</span>
+                  <p className={`text-4xl sm:text-5xl font-bold ${getSeverityColor(stats.latestGad7, 'gad7')}`}>
+                    {stats.latestGad7}<span className="text-xl sm:text-2xl" style={{ color: 'var(--text-secondary)' }}>/21</span>
                   </p>
                   <p className="text-sm font-semibold mt-2" style={{ color: 'var(--text-secondary)' }}>
                     {getSeverityLabel(stats.latestGad7, 'gad7')}
@@ -174,7 +174,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Assessment History */}
-            <div className="glass-effect rounded-2xl shadow-xl p-8"><h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Assessment History</h2>
+            <div className="glass-effect rounded-2xl shadow-xl p-4 sm:p-8"><h2 className="text-xl sm:text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Assessment History</h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>

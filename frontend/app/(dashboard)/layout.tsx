@@ -11,6 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const activeMenu = pathname?.includes('/chat')
     ? 'chat'
@@ -64,6 +65,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const activeGradient = `linear-gradient(135deg, var(--accent-700), var(--accent-600))`;
   const activeGradientHover = `linear-gradient(135deg, var(--accent-700), var(--accent-600))`;
   const hoverBg = 'var(--surface-2)';
@@ -75,6 +80,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleLogout = () => {
     authService.logout();
     router.push('/');
+  };
+
+  const navigateTo = (path: string) => {
+    router.push(path);
+    setMobileMenuOpen(false);
   };
 
   if (isLoading) {
@@ -89,20 +99,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-mid) 50%, var(--app-bg-end) 100%)' }}>
       {/* Modern Navigation Bar */}
       <nav className="glass-effect" style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--surface-border)` }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '4rem' }}>
+        <div className="mx-auto max-w-7xl px-3 sm:px-6">
+          <div className="flex h-16 items-center justify-between">
             {/* Logo & Brand */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Image src="/logo.PNG" alt="NeuroWell Logo" width={45} height={45} />
-              <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Image src="/logo.PNG" alt="NeuroWell Logo" width={40} height={40} />
+              <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }} className="sm:text-2xl">
                 NeuroWell
               </span>
             </div>
 
             {/* Desktop Menu */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="hidden md:flex" style={{ alignItems: 'center', gap: '0.5rem' }}>
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => navigateTo('/dashboard')}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.5rem',
@@ -114,13 +124,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = activeMenu === 'dashboard' ? activeGradientHover : hoverBg}
-                onMouseLeave={(e) => e.currentTarget.style.background = activeMenu === 'dashboard' ? activeGradient : 'transparent'}
               >
                 📊 Dashboard
               </button>
               <button
-                onClick={() => router.push('/chat')}
+                onClick={() => navigateTo('/chat')}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.5rem',
@@ -132,13 +140,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = activeMenu === 'chat' ? activeGradientHover : hoverBg}
-                onMouseLeave={(e) => e.currentTarget.style.background = activeMenu === 'chat' ? activeGradient : 'transparent'}
               >
                 💬 Chat
               </button>
               <button
-                onClick={() => router.push('/assessment')}
+                onClick={() => navigateTo('/assessment')}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.5rem',
@@ -150,13 +156,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = activeMenu === 'assessment' ? activeGradientHover : hoverBg}
-                onMouseLeave={(e) => e.currentTarget.style.background = activeMenu === 'assessment' ? activeGradient : 'transparent'}
               >
                 📝 Assessment
               </button>
               <button
-                onClick={() => router.push('/games')}
+                onClick={() => navigateTo('/games')}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.5rem',
@@ -168,8 +172,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = activeMenu === 'games' ? activeGradientHover : hoverBg}
-                onMouseLeave={(e) => e.currentTarget.style.background = activeMenu === 'games' ? activeGradient : 'transparent'}
               >
                 🎮 Games
               </button>
@@ -177,7 +179,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {/* Admin Panel - Only show for admin user */}
               {user?.username === 'admin' && (
                 <button
-                  onClick={() => router.push('/admin')}
+                  onClick={() => navigateTo('/admin')}
                   style={{
                     padding: '0.5rem 1rem',
                     borderRadius: '0.5rem',
@@ -189,26 +191,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
-                  onMouseEnter={(e) => {
-                    if (!pathname?.includes('/admin')) {
-                      e.currentTarget.style.background = '#fef2f2';
-                      e.currentTarget.style.borderColor = '#fca5a5';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!pathname?.includes('/admin')) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.borderColor = '#fecaca';
-                    }
-                  }}
                 >
                   👑 Admin
                 </button>
               )}
             </div>
 
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              className="md:hidden rounded-lg border px-3 py-2 text-sm font-semibold"
+              style={{ borderColor: 'var(--surface-border)', color: 'var(--text-primary)', background: cardBg }}
+            >
+              ☰
+            </button>
+
             {/* User Menu */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }} data-user-menu>
+            <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '1rem', position: 'relative' }} data-user-menu>
               {user && (
                 <button
                   type="button"
@@ -251,6 +250,93 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
             </div>
           </div>
+
+          {mobileMenuOpen && (
+            <div className="md:hidden pb-3">
+              <div className="flex flex-col gap-2 rounded-2xl border p-2" style={{ borderColor: 'var(--surface-border)', background: cardBg }}>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('/dashboard')}
+                  className="rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                  style={{
+                    background: activeMenu === 'dashboard' ? activeGradient : 'transparent',
+                    color: activeMenu === 'dashboard' ? '#ffffff' : inactiveText,
+                  }}
+                >
+                  📊 Dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('/chat')}
+                  className="rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                  style={{
+                    background: activeMenu === 'chat' ? activeGradient : 'transparent',
+                    color: activeMenu === 'chat' ? '#ffffff' : inactiveText,
+                  }}
+                >
+                  💬 Chat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('/assessment')}
+                  className="rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                  style={{
+                    background: activeMenu === 'assessment' ? activeGradient : 'transparent',
+                    color: activeMenu === 'assessment' ? '#ffffff' : inactiveText,
+                  }}
+                >
+                  📝 Assessment
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('/games')}
+                  className="rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                  style={{
+                    background: activeMenu === 'games' ? activeGradient : 'transparent',
+                    color: activeMenu === 'games' ? '#ffffff' : inactiveText,
+                  }}
+                >
+                  🎮 Games
+                </button>
+                {user?.username === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('/admin')}
+                    className="rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                    style={{
+                      background: pathname?.includes('/admin') ? 'linear-gradient(135deg, #dc2626, #ef4444)' : 'transparent',
+                      color: pathname?.includes('/admin') ? '#ffffff' : '#dc2626',
+                      border: '1px solid #fecaca',
+                    }}
+                  >
+                    👑 Admin
+                  </button>
+                )}
+
+                <div className="mt-2 border-t pt-2" style={{ borderColor: 'var(--surface-border)' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      router.push('/profile');
+                    }}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    Settings
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm"
+                    style={{ color: '#dc2626' }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 

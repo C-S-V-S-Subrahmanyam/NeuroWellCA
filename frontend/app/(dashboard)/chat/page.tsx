@@ -80,6 +80,7 @@ export default function ChatPage() {
   const [crisisAlert, setCrisisAlert] = useState<string | null>(null);
   const [guardianAlertStatus, setGuardianAlertStatus] = useState<{ sent: boolean; reason: string; provider?: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [lastMessageIndex, setLastMessageIndex] = useState(-1);
   const [feedbackByMessageId, setFeedbackByMessageId] = useState<Record<number, 'positive' | 'negative'>>({});
   const [activeSessionMenu, setActiveSessionMenu] = useState<string | null>(null);
@@ -105,7 +106,20 @@ export default function ChatPage() {
       router.push('/login');
       return;
     }
+
+    const syncViewport = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      setSidebarOpen(!mobile);
+    };
+
+    syncViewport();
+    window.addEventListener('resize', syncViewport);
     loadSessions();
+
+    return () => {
+      window.removeEventListener('resize', syncViewport);
+    };
   }, [router]);
 
   useEffect(() => {
@@ -444,18 +458,33 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex relative" style={{height: 'calc(100vh - 4rem)'}}>
+    <div className="flex relative overflow-hidden" style={{ height: 'calc(100vh - 4rem)' }}>
       {/* Sidebar Toggle Button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg hover:bg-gray-50 transition-all"
+        className="absolute top-3 left-3 z-50 p-2 bg-white rounded-lg shadow-lg hover:bg-gray-50 transition-all"
         style={{ display: sidebarOpen ? 'none' : 'block' }}
       >
         <Image src="/assets/sidebar.svg" alt="Open Sidebar" width={24} height={24} />
       </button>
 
+      {isMobile && sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="absolute inset-0 z-30 bg-black/30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`bg-white/80 backdrop-blur-xl border-r border-gray-200/50 flex flex-col shadow-xl transition-all duration-300 ${sidebarOpen ? 'w-80' : 'w-0 hidden'}`}>
+      <aside
+        className={`
+          bg-white/90 backdrop-blur-xl border-r border-gray-200/50 flex flex-col shadow-xl transition-all duration-300
+          ${isMobile ? 'absolute left-0 top-0 bottom-0 z-40 w-[82vw] max-w-[20rem]' : 'relative w-80'}
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-0 lg:hidden'}
+        `}
+      >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-gray-200/50 flex items-center justify-between">
           <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">Chats</h2>
@@ -504,7 +533,7 @@ export default function ChatPage() {
           {visibleSessions.map((session) => (
             <div
               key={session.session_id}
-              className={`w-full p-4 rounded-xl mb-2 transition-all duration-200 ${
+              className={`relative w-full p-4 rounded-xl mb-2 transition-all duration-200 ${
                 currentSessionId === session.session_id
                   ? 'bg-gradient-to-r from-blue-50 to-blue-50 border-2 border-blue-500/50 shadow-md'
                   : 'bg-gray-50/50 border-2 border-transparent hover:bg-gray-100/80'
@@ -512,7 +541,10 @@ export default function ChatPage() {
             >
               <div className="flex items-start gap-3">
                 <button
-                  onClick={() => setCurrentSessionId(session.session_id)}
+                  onClick={() => {
+                    setCurrentSessionId(session.session_id);
+                    if (isMobile) setSidebarOpen(false);
+                  }}
                   className="flex items-start gap-3 flex-1 min-w-0 text-left"
                 >
                   <span className="text-2xl">💬</span>
@@ -595,7 +627,7 @@ export default function ChatPage() {
       </aside>
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-w-0">
         {/* Crisis Alert */}
         {crisisAlert && (
           <div className="bg-red-600 text-white p-4 shadow-lg">
@@ -626,7 +658,7 @@ export default function ChatPage() {
         )}
 
         {!isAdmin && showMoodCard && (
-          <div className="px-6 pt-5">
+          <div className="px-3 pt-4 sm:px-6 sm:pt-5">
             <div className="max-w-4xl mx-auto rounded-3xl border border-cyan-200/80 bg-white/85 backdrop-blur-xl p-4 shadow-lg shadow-cyan-100/40">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-xl">
@@ -710,17 +742,17 @@ export default function ChatPage() {
         )}
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="flex-1 overflow-y-auto px-3 py-6 sm:px-6 sm:py-8">
           <div className="max-w-4xl mx-auto">
             {messages.length === 0 ? (
               <div className="text-center mt-20">
                 <div className="inline-block p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl shadow-2xl mb-6">
                   <span className="text-6xl">🧠</span>
                 </div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-3">
+                <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-3">
                   How are you feeling today?
                 </h2>
-                <p className="text-gray-600 text-lg">
+                <p className="text-gray-600 text-base sm:text-lg">
                   I'm here to listen and support you on your mental wellness journey.
                 </p>
               </div>
@@ -739,7 +771,7 @@ export default function ChatPage() {
                       </div>
                     )}
                     <div
-                      className={`max-w-2xl rounded-2xl px-5 py-3 shadow-md ${
+                      className={`max-w-[82%] sm:max-w-2xl rounded-2xl px-4 sm:px-5 py-3 shadow-md ${
                         msg.role === 'user'
                           ? ''
                           : 'bg-white text-gray-900 border border-gray-200'
@@ -753,7 +785,7 @@ export default function ChatPage() {
                             isNew={idx === lastMessageIndex}
                             className="text-sm leading-relaxed"
                           />
-                          <div className="mt-3 flex items-center gap-2">
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleFeedback(msg.id, 'positive')}
@@ -778,7 +810,7 @@ export default function ChatPage() {
                             </button>
                             <Link
                               href={resolveSuggestedGame(msg.gameSuggestion, msg.id, idx).href}
-                              className="ml-2 px-3 py-1 text-xs rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold transition hover:opacity-95"
+                              className="px-3 py-1 text-xs rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold transition hover:opacity-95"
                             >
                               ▶ Play {resolveSuggestedGame(msg.gameSuggestion, msg.id, idx).title}
                             </Link>
@@ -828,9 +860,9 @@ export default function ChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200/50 bg-white/80 backdrop-blur-xl p-6 shadow-xl">
+        <div className="border-t border-gray-200/50 bg-white/80 backdrop-blur-xl p-3 sm:p-6 shadow-xl">
           <form onSubmit={handleSend} className="max-w-4xl mx-auto">
-            <div className="flex items-end gap-3">
+            <div className="flex items-end gap-2 sm:gap-3">
               <div className="flex-1 relative">
                 <textarea
                   value={input}
@@ -844,7 +876,7 @@ export default function ChatPage() {
                   placeholder="Type your message here..."
                   disabled={isSending}
                   rows={1}
-                  className="w-full px-5 py-4 bg-gray-100 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200 resize-none text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-100 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all duration-200 resize-none text-gray-900 placeholder-gray-400"
                   style={{minHeight: '56px', maxHeight: '150px'}}
                 />
               </div>
